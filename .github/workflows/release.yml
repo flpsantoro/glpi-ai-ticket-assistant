@@ -31,10 +31,21 @@ jobs:
 
       - name: Release notes from the changelog section of the version
         run: |
+          # The section of the version, with its wrapped lines joined: release
+          # notes keep every line break, a Markdown file does not
           awk -v version="[${VERSION}]" '
             /^## \[/ { if (found) exit; if (index($0, version)) { found = 1; next } }
             found { print }
-          ' CHANGELOG.md > RELEASE_NOTES.md
+          ' CHANGELOG.md | awk '
+            function flush() { if (line != "") print line; line = "" }
+            /^```/ { flush(); print; fenced = !fenced; next }
+            fenced { print; next }
+            /^[[:space:]]*$/ { flush(); print ""; next }
+            /^#/ { flush(); print; next }
+            /^(- |\* |[0-9]+\. )/ { flush(); line = $0; next }
+            { sub(/^[[:space:]]+/, ""); line = (line == "" ? $0 : line " " $0) }
+            END { flush() }
+          ' > RELEASE_NOTES.md
           test -s RELEASE_NOTES.md || { echo "CHANGELOG.md has no section for ${VERSION}"; exit 1; }
 
       - uses: softprops/action-gh-release@v2
