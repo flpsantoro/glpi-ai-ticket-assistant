@@ -181,4 +181,5 @@ On GLPI 10, 11 and 12, with the mock provider and the demo data:
 2. Run the tests and the end-to-end checklist.
 3. Tag `vX.Y.Z` and push the tag: the release workflow checks the version, builds
    `ticketassistant-X.Y.Z.tar.bz2` and `.zip` with `git archive` (files marked `export-ignore` in
-   `.gitattributes` are left out) and attaches them with their SHA-256 sums to a GitHub release.
+   `.gitattributes` are left out) and attaches them with their SHA-256 sums to a GitHub release,
+   whose notes are the section of the version in `CHANGELOG.md`.

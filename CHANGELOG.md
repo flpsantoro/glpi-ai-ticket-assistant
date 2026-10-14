@@ -3,11 +3,10 @@
 All notable changes of the plugin. Versions follow [Semantic Versioning](https://semver.org/);
 every release updates `PLUGIN_TICKETASSISTANT_VERSION` in `setup.php`.
 
-## [1.0.0] — 2026-10
+## [1.0.0] — 2026-10-14
 
-First public release. The plugin is a generic, community edition of an assistant that has
-been used in production by a public-sector service desk since July 2026, rewritten for any
-organization and any AI provider.
+First public release: an AI assistant for the technicians of any GLPI installation, with any AI
+provider.
 
 ### Ticket analysis
 - **AI assistant** button in the timeline: summary, technical strategy (probable diagnosis, what to
