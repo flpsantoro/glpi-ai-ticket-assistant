@@ -56,94 +56,94 @@ msgstr "AI Ticket Assistant : suggère le type et la catégorie des nouveaux tic
 msgid "AI Ticket Assistant: applies the retention policy of the AI assistant log"
 msgstr "AI Ticket Assistant : applique la politique de conservation du journal de l'assistant IA"
 
-#: src/Assistant.php:120
+#: src/Assistant.php:121
 msgid "Internal error of the assistant. If it persists, contact the administrator."
 msgstr "Erreur interne de l'assistant. Si elle persiste, contactez l'administrateur."
 
-#: src/Assistant.php:401
+#: src/Assistant.php:402
 #: src/TicketHooks.php:141
 #: src/TicketHooks.php:242
 msgid "Write a draft in the editor first."
 msgstr "Rédigez d'abord un brouillon dans l'éditeur."
 
-#: src/Assistant.php:557
+#: src/Assistant.php:558
 msgid "You cannot update this ticket."
 msgstr "Vous ne pouvez pas modifier ce ticket."
 
-#: src/Assistant.php:570
+#: src/Assistant.php:571
 msgid "This category is not available for the entity of the ticket."
 msgstr "Cette catégorie n'est pas disponible pour l'entité du ticket."
 
-#: src/Assistant.php:573
+#: src/Assistant.php:574
 msgid "This category cannot be used with this ticket type."
 msgstr "Cette catégorie ne peut pas être utilisée avec ce type de ticket."
 
-#: src/Assistant.php:582
+#: src/Assistant.php:583
 msgid "Nothing to apply."
 msgstr "Rien à appliquer."
 
-#: src/Assistant.php:595
+#: src/Assistant.php:596
 msgid "Classification applied to the ticket."
 msgstr "Classification appliquée au ticket."
 
-#: src/Assistant.php:596
+#: src/Assistant.php:597
 msgid "GLPI refused the update of the ticket."
 msgstr "GLPI a refusé la mise à jour du ticket."
 
-#: src/Assistant.php:609
+#: src/Assistant.php:610
 msgid "A knowledge base article can be written once the ticket has a solution."
 msgstr "Un article de la base de connaissances peut être rédigé dès que le ticket a une solution."
 
-#: src/Assistant.php:66
-msgid "Ticket not found."
-msgstr "Ticket introuvable."
-
-#: src/Assistant.php:662
+#: src/Assistant.php:663
 msgid "You cannot create knowledge base articles."
 msgstr "Vous ne pouvez pas créer d'articles dans la base de connaissances."
 
-#: src/Assistant.php:667
+#: src/Assistant.php:668
 msgid "The article needs a title and a content."
 msgstr "L'article doit avoir un titre et un contenu."
 
-#: src/Assistant.php:678
+#: src/Assistant.php:67
+msgid "Ticket not found."
+msgstr "Ticket introuvable."
+
+#: src/Assistant.php:679
 msgid "GLPI refused the creation of the article."
 msgstr "GLPI a refusé la création de l'article."
 
-#: src/Assistant.php:69
-msgid "You cannot see this ticket."
-msgstr "Vous n'avez pas accès à ce ticket."
-
-#: src/Assistant.php:694
+#: src/Assistant.php:695
 msgid "Draft article created: review it and choose its audience to publish it."
 msgstr "Brouillon d'article créé : relisez-le et choisissez sa cible pour le publier."
 
-#: src/Assistant.php:719
+#: src/Assistant.php:70
+msgid "You cannot see this ticket."
+msgstr "Vous n'avez pas accès à ce ticket."
+
+#: src/Assistant.php:720
 msgid "This ticket was processed a moment ago. Wait %d s to generate again."
 msgstr "Ce ticket vient d'être traité. Attendez %d s pour générer à nouveau."
 
-#: src/Assistant.php:72
+#: src/Assistant.php:73
 msgid "The AI assistant is not enabled."
 msgstr "L'assistant IA n'est pas activé."
 
-#: src/Assistant.php:730
+#: src/Assistant.php:731
 msgid "You reached the limit of %d uses of the assistant per hour. Try again later."
 msgstr "Vous avez atteint la limite de %d utilisations de l'assistant par heure. Réessayez plus tard."
 
-#: src/Assistant.php:739
+#: src/Assistant.php:740
 msgid "The daily budget of the AI assistant is exhausted. Try again tomorrow or contact the administrator."
 msgstr "Le budget quotidien de l'assistant IA est épuisé. Réessayez demain ou contactez l'administrateur."
 
-#: src/Assistant.php:821
+#: src/Assistant.php:822
 msgid "Service desk team"
 msgstr "Équipe du support"
 
-#: src/Assistant.php:85
-#: src/Assistant.php:123
+#: src/Assistant.php:86
+#: src/Assistant.php:124
 msgid "Unknown action."
 msgstr "Action inconnue."
 
-#: src/Assistant.php:88
+#: src/Assistant.php:89
 msgid "This action of the assistant is disabled."
 msgstr "Cette action de l'assistant est désactivée."
 
