@@ -34,7 +34,7 @@ if (count($post) && Session::haveRight('config', UPDATE)) {
             $stats['added'],
             $stats['updated'],
             $stats['unchanged'],
-            $stats['removed']
+            $stats['removed'],
         ), true, INFO);
     } elseif (isset($post['learn'])) {
         $result = Learner::run($config, (int) $config['learn_batch']);
@@ -43,7 +43,7 @@ if (count($post) && Session::haveRight('config', UPDATE)) {
             $result['distilled'],
             $result['embedded'],
             $result['errors'],
-            number_format($result['cost_usd'], 4)
+            number_format($result['cost_usd'], 4),
         ), true, $result['errors'] > 0 ? WARNING : INFO);
         if ($result['stopped'] === 'budget') {
             Session::addMessageAfterRedirect(__('Stopped: the daily budget of automatic actions is reached.', 'ticketassistant'), true, WARNING);
@@ -54,7 +54,7 @@ if (count($post) && Session::haveRight('config', UPDATE)) {
         Session::addMessageAfterRedirect(sprintf(
             __('Evaluation done on %1$d tickets: %2$s%% right on the first suggestion.', 'ticketassistant'),
             $evaluation['sample'],
-            number_format(100 * $evaluation['accuracy_top1'], 1)
+            number_format(100 * $evaluation['accuracy_top1'], 1),
         ), true, INFO);
     }
     Html::back();

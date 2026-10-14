@@ -202,7 +202,7 @@ class OpenAiDriver extends AbstractDriver
                 throw new LlmException(
                     LlmException::KIND_BAD_RESPONSE,
                     'Truncated answer: raise the maximum tokens (on reasoning models the budget includes reasoning tokens)',
-                    $http_code
+                    $http_code,
                 );
             }
             throw new LlmException(LlmException::KIND_BAD_RESPONSE, 'Empty answer (finish_reason: ' . $finish . ')', $http_code);
@@ -309,7 +309,7 @@ class OpenAiDriver extends AbstractDriver
             $kind,
             $detail,
             $http_code,
-            in_array($kind, [LlmException::KIND_RATE_LIMIT, LlmException::KIND_HTTP], true) ? self::retryAfter($headers) : null
+            in_array($kind, [LlmException::KIND_RATE_LIMIT, LlmException::KIND_HTTP], true) ? self::retryAfter($headers) : null,
         );
     }
 

@@ -96,7 +96,7 @@ class CategoryGuideline extends CommonDBTM
                 'is_recursive' => $recursive ? 1 : 0,
                 'date_mod'     => date('Y-m-d H:i:s'),
             ],
-            ['itilcategories_id' => $category_id]
+            ['itilcategories_id' => $category_id],
         );
     }
 

@@ -11,6 +11,7 @@
 namespace GlpiPlugin\Ticketassistant;
 
 use CommonITILObject;
+use CommonITILTask;
 use CommonITILValidation;
 use DbUtils;
 use GlpiPlugin\Ticketassistant\Knowledge\CaseLibrary;
@@ -18,6 +19,7 @@ use GlpiPlugin\Ticketassistant\Knowledge\Classifier;
 use GlpiPlugin\Ticketassistant\Knowledge\Suggester;
 use GlpiPlugin\Ticketassistant\Knowledge\Triage;
 use GlpiPlugin\Ticketassistant\Llm\ChatRequest;
+use GlpiPlugin\Ticketassistant\Llm\ChatResponse;
 use GlpiPlugin\Ticketassistant\Llm\Client;
 use GlpiPlugin\Ticketassistant\Llm\LlmException;
 use ITILFollowup;
@@ -27,7 +29,6 @@ use KnowbaseItem_Item;
 use Session;
 use SolutionTemplate;
 use Ticket;
-use CommonITILTask;
 
 /**
  * Orchestrates the actions triggered from the ticket:
@@ -717,7 +718,7 @@ final class Assistant
                 return self::fail(
                     'blocked_cooldown',
                     sprintf(__('This ticket was processed a moment ago. Wait %d s to generate again.', 'ticketassistant'), $wait),
-                    $wait
+                    $wait,
                 );
             }
         }
@@ -727,7 +728,7 @@ final class Assistant
             Log::record(['users_id' => $users_id, 'tickets_id' => $tickets_id, 'action' => $action, 'status' => 'blocked_rate']);
             return self::fail(
                 'blocked_rate',
-                sprintf(__('You reached the limit of %d uses of the assistant per hour. Try again later.', 'ticketassistant'), $hourly)
+                sprintf(__('You reached the limit of %d uses of the assistant per hour. Try again later.', 'ticketassistant'), $hourly),
             );
         }
 
@@ -736,7 +737,7 @@ final class Assistant
             Log::record(['users_id' => $users_id, 'tickets_id' => $tickets_id, 'action' => $action, 'status' => 'blocked_budget']);
             return self::fail(
                 'blocked_budget',
-                __('The daily budget of the AI assistant is exhausted. Try again tomorrow or contact the administrator.', 'ticketassistant')
+                __('The daily budget of the AI assistant is exhausted. Try again tomorrow or contact the administrator.', 'ticketassistant'),
             );
         }
         return null;
@@ -745,7 +746,7 @@ final class Assistant
     /**
      * @throws LlmException after logging the failure
      */
-    private static function call(Client $client, ChatRequest $request, string $action, int $tickets_id, int $users_id, string $mode = ''): \GlpiPlugin\Ticketassistant\Llm\ChatResponse
+    private static function call(Client $client, ChatRequest $request, string $action, int $tickets_id, int $users_id, string $mode = ''): ChatResponse
     {
         try {
             return $client->chat($request);
@@ -770,7 +771,7 @@ final class Assistant
     /**
      * @throws LlmException after logging the invalid answer (the call was paid)
      */
-    private static function parse(\GlpiPlugin\Ticketassistant\Llm\ChatResponse $response, array $keys, string $action, int $tickets_id, int $users_id, Client $client, string $mode = ''): array
+    private static function parse(ChatResponse $response, array $keys, string $action, int $tickets_id, int $users_id, Client $client, string $mode = ''): array
     {
         try {
             return ResponseParser::parse($response->content, $keys);
@@ -788,7 +789,7 @@ final class Assistant
         }
     }
 
-    private static function logFields(Client $client, \GlpiPlugin\Ticketassistant\Llm\ChatResponse $response, array $fields): array
+    private static function logFields(Client $client, ChatResponse $response, array $fields): array
     {
         $settings = $client->getSettings();
         return $fields + [

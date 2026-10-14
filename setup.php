@@ -53,14 +53,14 @@ function plugin_init_ticketassistant()
     try {
         $PLUGIN_HOOKS['change_profile']['ticketassistant'] = [Profile::class, 'initProfile'];
         Plugin::registerClass(Profile::class, ['addtabon' => [\Profile::class]]);
-        Plugin::registerClass(CategoryGuideline::class, ['addtabon' => [\ITILCategory::class]]);
+        Plugin::registerClass(CategoryGuideline::class, ['addtabon' => [ITILCategory::class]]);
 
         // Automatic triage queue (also for tickets created by the mail collector),
         // use of the rewritten texts (submitted with a followup or a solution)
         $PLUGIN_HOOKS['item_add']['ticketassistant'] = [
-            \Ticket::class       => [Triage::class, 'onTicketAdd'],
-            \ITILFollowup::class => [TicketHooks::class, 'onAnswerAdd'],
-            \ITILSolution::class => [TicketHooks::class, 'onAnswerAdd'],
+            Ticket::class       => [Triage::class, 'onTicketAdd'],
+            ITILFollowup::class => [TicketHooks::class, 'onAnswerAdd'],
+            ITILSolution::class => [TicketHooks::class, 'onAnswerAdd'],
         ];
 
         if (!Session::getLoginUserID()) {
@@ -87,7 +87,7 @@ function plugin_init_ticketassistant()
             $PLUGIN_HOOKS['add_javascript']['ticketassistant'][] = Compat::assetHookPath('js/assistant.js');
             $PLUGIN_HOOKS['add_css']['ticketassistant'][]        = Compat::assetHookPath('css/assistant.css');
         }
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         Compat::log('init: ' . $e->getMessage());
     }
 }
@@ -129,7 +129,7 @@ function plugin_version_ticketassistant()
  * "requirements" of plugin_version_ticketassistant(), with its own
  * translated messages.
  *
- * @return boolean
+ * @return bool
  */
 function plugin_ticketassistant_check_prerequisites()
 {
@@ -139,9 +139,9 @@ function plugin_ticketassistant_check_prerequisites()
 /**
  * Check configuration process - OPTIONAL.
  *
- * @param boolean $verbose Whether to display message on failure.
+ * @param bool $verbose Whether to display message on failure.
  *
- * @return boolean
+ * @return bool
  */
 function plugin_ticketassistant_check_config($verbose = false)
 {

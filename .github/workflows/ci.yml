@@ -26,6 +26,19 @@ jobs:
       - name: Lint every PHP file
         run: find . -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 -P4 php -l | (! grep -v '^No syntax errors')
 
+  style:
+    name: Coding style (GLPI plugins baseline)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: php-cs-fixer:3.95.27
+      - name: PER-CS 3.0 and the rules of GLPI (.php-cs-fixer.dist.php)
+        run: php-cs-fixer check --diff --show-progress=none
+
   unit:
     name: Unit tests (PHP ${{ matrix.php }})
     runs-on: ubuntu-latest

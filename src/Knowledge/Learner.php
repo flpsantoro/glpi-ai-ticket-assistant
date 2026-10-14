@@ -73,7 +73,7 @@ final class Learner extends \CommonGLPI
             $result['distilled'],
             $result['embedded'],
             $result['errors'],
-            number_format($result['cost_usd'], 4)
+            number_format($result['cost_usd'], 4),
         ));
         return ($result['distilled'] + $result['embedded']) > 0 ? 1 : 0;
     }
@@ -156,7 +156,7 @@ final class Learner extends \CommonGLPI
             $ticket,
             array_merge($config, ['max_context_chars' => 12000]),
             ['vision' => false],
-            ['private' => TicketContext::PRIVATE_ALL, 'attachments' => false]
+            ['private' => TicketContext::PRIVATE_ALL, 'attachments' => false],
         );
 
         // Candidates: current category + categories of the nearest cases
@@ -187,7 +187,7 @@ final class Learner extends \CommonGLPI
             Prompt::fence('ticket', $context['text'])
             . "\n\n## CURRENT CLASSIFICATION\nType: " . ((int) $ticket->fields['type'] === Ticket::DEMAND_TYPE ? 'request' : 'incident')
             . "\nCategory: " . ($current > 0 ? '[id ' . $current . '] ' . (string) $case['category_name'] : '(none)')
-            . (count($lines) ? "\n\n## CANDIDATE CATEGORIES\n" . implode("\n", $lines) : '')
+            . (count($lines) ? "\n\n## CANDIDATE CATEGORIES\n" . implode("\n", $lines) : ''),
         );
 
         $settings = $client->getSettings();
@@ -352,7 +352,7 @@ final class Learner extends \CommonGLPI
                AND c.`ai_category_id` > 0
                AND c.`ai_category_id` <> c.`itilcategories_id`
              ORDER BY c.`date_solved` DESC
-             LIMIT ' . max(1, $limit)
+             LIMIT ' . max(1, $limit),
         );
     }
 }

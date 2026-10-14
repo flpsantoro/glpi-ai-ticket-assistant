@@ -3,6 +3,16 @@
 All notable changes of the plugin. Versions follow [Semantic Versioning](https://semver.org/);
 every release updates `PLUGIN_TICKETASSISTANT_VERSION` in `setup.php`.
 
+## [Unreleased]
+
+### Changed
+- Coding style of the GLPI plugins baseline (PER Coding Style 3.0 with PHP-CS-Fixer), checked by
+  the CI.
+- The PHP extensions are checked by GLPI from the requirements of the plugin, with its translated
+  messages.
+- `plugin.xml` (plugins catalog): screenshots, link to the changelog, description and tags in French
+  and Spanish, exact minimum version of GLPI 10 (10.0.11).
+
 ## [1.0.0] — 2026-10-14
 
 First public release: an AI assistant for the technicians of any GLPI installation, with any AI

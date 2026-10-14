@@ -25,6 +25,7 @@ backup*.sql
 /build/
 /dist/
 .phpunit.result.cache
+.php-cs-fixer.cache
 .phpunit.cache/
 composer.lock
 tools/mock-llm/*.jsonl

@@ -121,7 +121,7 @@ final class ConfigForm
                 __('Still missing before the assistant can work: %s.', 'ticketassistant'),
                 implode(', ', array_map(static function ($key) use ($labels) {
                     return $labels[$key] ?? $key;
-                }, $missing))
+                }, $missing)),
             )) . '</div>';
         }
         echo '</div></div>';
@@ -444,7 +444,7 @@ final class ConfigForm
             $stats['cases'],
             $stats['distilled'],
             $stats['embedded'],
-            $stats['last_sync'] ?? '-'
+            $stats['last_sync'] ?? '-',
         ), $stats['cases'] > 0];
 
         foreach (self::cronStates() as $name => $state) {

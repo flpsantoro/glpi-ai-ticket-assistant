@@ -186,7 +186,7 @@ class DemoCommand extends Command
             Ticket::INCIDENT_TYPE,
             'VPN error 809 since this morning',
             '<p>Hello, since this morning I cannot connect to the VPN from the hotel. Windows shows an error (screenshot attached). I have a presentation at 2 pm and need the files of the shared drive.</p><p>Password: Summer2026! (in case you need it)</p>',
-            $users[0]
+            $users[0],
         );
         $this->attach($vpn, Ticket::class, $entity_id, 'vpn-error.png', $this->screenshot());
         $this->attach($vpn, Ticket::class, $entity_id, 'network-change-notice.pdf', $this->pdf());
@@ -210,7 +210,7 @@ class DemoCommand extends Command
             Ticket::INCIDENT_TYPE,
             'Pages come out blank from the finance printer',
             '<p>All the pages printed on the finance printer are blank since the toner was changed yesterday.</p>',
-            $users[1]
+            $users[1],
         );
         $access = $this->ticket(
             $entity_id,
@@ -218,7 +218,7 @@ class DemoCommand extends Command
             Ticket::DEMAND_TYPE,
             'Access to the budget folder for the new analyst',
             '<p>Our new analyst needs access to the finance shared folder to prepare the budget. The manager of the department already agreed.</p>',
-            $users[2]
+            $users[2],
         );
         $output->writeln(sprintf('<info>Open tickets: #%d (VPN, screenshot + PDF + log), #%d (printer), #%d (access, no category)</info>', $vpn, $printer, $access));
         $output->writeln('Next: php bin/console plugins:ticketassistant:sync');

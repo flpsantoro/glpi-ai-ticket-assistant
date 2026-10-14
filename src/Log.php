@@ -115,7 +115,7 @@ class Log extends CommonDBTM
         return (bool) $DB->update(
             self::TABLE,
             ['feedback' => $value === 0 ? null : $value],
-            ['id' => $log_id, 'users_id' => $users_id, 'status' => 'ok']
+            ['id' => $log_id, 'users_id' => $users_id, 'status' => 'ok'],
         );
     }
 
@@ -131,7 +131,7 @@ class Log extends CommonDBTM
         return (bool) $DB->update(
             self::TABLE,
             ['used' => 1],
-            ['id' => $log_id, 'users_id' => $users_id, 'status' => 'ok']
+            ['id' => $log_id, 'users_id' => $users_id, 'status' => 'ok'],
         );
     }
 
@@ -235,7 +235,7 @@ class Log extends CommonDBTM
         $task->log(sprintf(
             __('%1$d generated texts cleared, %2$d log rows deleted', 'ticketassistant'),
             $result['texts'],
-            $result['rows']
+            $result['rows'],
         ));
         return ($result['texts'] + $result['rows']) > 0 ? 1 : 0;
     }
@@ -259,7 +259,7 @@ class Log extends CommonDBTM
                 [
                     ['date_creation' => ['<', date('Y-m-d H:i:s', strtotime("-{$text_days} days"))]],
                     ['NOT' => ['response_json' => null]],
-                ]
+                ],
             );
             $texts = (int) $DB->affectedRows();
         }
@@ -269,7 +269,7 @@ class Log extends CommonDBTM
         if ($row_days > 0) {
             $DB->delete(
                 self::TABLE,
-                [['date_creation' => ['<', date('Y-m-d 00:00:00', strtotime('-' . max(1, $row_days) . ' days'))]]]
+                [['date_creation' => ['<', date('Y-m-d 00:00:00', strtotime('-' . max(1, $row_days) . ' days'))]]],
             );
             $rows = (int) $DB->affectedRows();
         }

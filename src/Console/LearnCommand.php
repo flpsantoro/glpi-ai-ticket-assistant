@@ -47,7 +47,7 @@ class LearnCommand extends Command
             $result['embedded'],
             $result['errors'],
             number_format($result['cost_usd'], 4),
-            $result['stopped'] === 'budget' ? ' — stopped: daily background budget reached' : ''
+            $result['stopped'] === 'budget' ? ' — stopped: daily background budget reached' : '',
         ));
         return $result['errors'] > 0 && ($result['distilled'] + $result['embedded']) === 0 ? 1 : 0;
     }

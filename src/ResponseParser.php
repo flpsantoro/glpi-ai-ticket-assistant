@@ -11,6 +11,8 @@
 namespace GlpiPlugin\Ticketassistant;
 
 use GlpiPlugin\Ticketassistant\Llm\LlmException;
+use League\CommonMark\CommonMarkConverter;
+use Michelf\Markdown;
 
 /**
  * Treats everything the model returns as untrusted input: JSON is decoded
@@ -94,7 +96,7 @@ final class ResponseParser
                         static function ($item) {
                             return is_scalar($item) ? trim(strip_tags((string) $item)) : '';
                         },
-                        $value
+                        $value,
                     ), 'strlen')) : [];
                     break;
                 default:
@@ -193,11 +195,11 @@ final class ResponseParser
     {
         try {
             if (class_exists('\\League\\CommonMark\\CommonMarkConverter')) {
-                $converter = new \League\CommonMark\CommonMarkConverter(['html_input' => 'escape', 'allow_unsafe_links' => false]);
+                $converter = new CommonMarkConverter(['html_input' => 'escape', 'allow_unsafe_links' => false]);
                 return (string) $converter->convert($markdown);
             }
             if (class_exists('\\Michelf\\Markdown')) {
-                $parser = new \Michelf\Markdown();
+                $parser = new Markdown();
                 $parser->no_markup = true;
                 $parser->no_entities = true;
                 return (string) $parser->transform($markdown);

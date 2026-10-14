@@ -133,7 +133,7 @@ function plugin_ticketassistant_schema(): array
  * Idempotent: creates what is missing and keeps the configuration, the keys,
  * the logs and the library of solved tickets.
  *
- * @return boolean
+ * @return bool
  */
 function plugin_ticketassistant_install()
 {
@@ -192,7 +192,7 @@ function plugin_ticketassistant_install()
  * Plugin uninstall process: removes tables, configuration, rights and
  * automatic actions. The API keys stay valid at the provider: revoke them.
  *
- * @return boolean
+ * @return bool
  */
 function plugin_ticketassistant_uninstall()
 {

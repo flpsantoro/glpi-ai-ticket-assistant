@@ -10,6 +10,8 @@
 
 namespace GlpiPlugin\Ticketassistant;
 
+use Glpi\Toolbox\Sanitizer;
+
 /**
  * Every difference between GLPI 10.0, 11 and 12 handled by the plugin is
  * isolated here, so that one code base runs on all of them.
@@ -57,7 +59,7 @@ final class Compat
             return $value;
         }
         if (class_exists('\\Glpi\\Toolbox\\Sanitizer')) {
-            return (string) \Glpi\Toolbox\Sanitizer::decodeHtmlSpecialChars($value);
+            return (string) Sanitizer::decodeHtmlSpecialChars($value);
         }
         return str_replace(['&#60;', '&#62;', '&#38;'], ['<', '>', '&'], $value);
     }
@@ -75,7 +77,7 @@ final class Compat
                 return $GLOBALS['_UPOST'];
             }
             if (class_exists('\\Glpi\\Toolbox\\Sanitizer')) {
-                return (array) \Glpi\Toolbox\Sanitizer::unsanitize($_POST);
+                return (array) Sanitizer::unsanitize($_POST);
             }
         }
         return $_POST;
@@ -106,7 +108,7 @@ final class Compat
     public static function itemInput(array $input): array
     {
         if (!self::isGlpi11() && class_exists('\\Glpi\\Toolbox\\Sanitizer')) {
-            return (array) \Glpi\Toolbox\Sanitizer::sanitize($input);
+            return (array) Sanitizer::sanitize($input);
         }
         return $input;
     }

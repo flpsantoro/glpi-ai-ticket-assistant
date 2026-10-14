@@ -102,7 +102,7 @@ final class CaseLibrary extends \CommonGLPI
                    AND t.`id` > ' . (int) $last_id . '
                    ' . $where_since . '
                  ORDER BY t.`id` ASC
-                 LIMIT ' . self::BATCH
+                 LIMIT ' . self::BATCH,
             );
             if (!count($rows)) {
                 break;
@@ -182,7 +182,7 @@ final class CaseLibrary extends \CommonGLPI
             'SELECT c.`id` FROM `' . self::TABLE . '` c
              LEFT JOIN `glpi_tickets` t ON t.`id` = c.`tickets_id`
              WHERE t.`id` IS NULL OR t.`is_deleted` = 1
-                OR t.`status` NOT IN (' . (int) CommonITILObject::SOLVED . ', ' . (int) CommonITILObject::CLOSED . ')'
+                OR t.`status` NOT IN (' . (int) CommonITILObject::SOLVED . ', ' . (int) CommonITILObject::CLOSED . ')',
         );
         if (!count($rows)) {
             return 0;
@@ -306,13 +306,13 @@ final class CaseLibrary extends \CommonGLPI
                  FROM `" . self::TABLE . "`
                  WHERE {$where_sql} AND {$match} > 0
                  ORDER BY score DESC
-                 LIMIT " . ($vector !== null ? 100 : max(50, $limit * 4))
+                 LIMIT " . ($vector !== null ? 100 : max(50, $limit * 4)),
             );
             $query_vector = Similarity::vector($query);
             foreach ($rows as $row) {
                 $similarity = Similarity::cosine($query_vector, Similarity::caseVector(
                     (int) $row['id'],
-                    $row['words_problem'] . "\n" . $row['words_summary'] . "\n" . $row['words_keywords']
+                    $row['words_problem'] . "\n" . $row['words_summary'] . "\n" . $row['words_keywords'],
                 ));
                 unset($row['words_problem'], $row['words_summary'], $row['words_keywords']);
                 if ($similarity <= 0.0) {
@@ -343,7 +343,7 @@ final class CaseLibrary extends \CommonGLPI
                         'SELECT `id`, `embedding` FROM `' . self::TABLE . "`
                          WHERE {$where_sql} AND `embedding` IS NOT NULL
                          ORDER BY `date_solved` DESC, `id` DESC
-                         LIMIT {$chunk} OFFSET {$offset}"
+                         LIMIT {$chunk} OFFSET {$offset}",
                     );
                     foreach ($rows as $row) {
                         $id = (int) $row['id'];
@@ -416,7 +416,7 @@ final class CaseLibrary extends \CommonGLPI
                  WHERE {$where_sql} AND `itilcategories_id` = {$category_id}"
                 . (count($known) ? ' AND `id` NOT IN (' . implode(',', $known) . ')' : '') . '
                  ORDER BY `date_solved` DESC
-                 LIMIT ' . ($limit - count($results))
+                 LIMIT ' . ($limit - count($results)),
             );
             foreach ($rows as $row) {
                 $row['similarity'] = 0.0;
@@ -483,7 +483,7 @@ final class CaseLibrary extends \CommonGLPI
             __('%1$d added, %2$d updated, %3$d removed', 'ticketassistant'),
             $stats['added'],
             $stats['updated'],
-            $stats['removed']
+            $stats['removed'],
         ));
         return 1;
     }

@@ -123,6 +123,7 @@ every chat answer wait 3 seconds, like a real model, to see the loading states.
 ```bash
 composer install && vendor/bin/phpunit                         # unit tests (PHP 7.4+)
 find . -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
+php-cs-fixer check --diff                                       # coding style (fix: php-cs-fixer fix)
 bash tests/installer/installer-test.sh                         # install.sh against a fake GLPI
 powershell -File tests\installer\installer-test.ps1 -PhpExe C:\php\php.exe   # install.ps1
 node --check public/js/assistant.js public/js/config.js
@@ -132,12 +133,16 @@ node --check public/js/assistant.js public/js/config.js
   sanitizing, HTTP client and drivers, text helpers, word similarity, PDF extraction (synthetic
   PDFs: simple and composite fonts, ToUnicode maps, object streams, form XObjects, inline images,
   incremental updates, encrypted and invalid files).
+- **Coding style**: the baseline GLPI gives its plugins (`PluginsPhpCsFixer.php` in the GLPI
+  repository: PER Coding Style 3.0, sorted imports, PHPDoc types), in `.php-cs-fixer.dist.php`,
+  with no trailing comma after the last parameter of a declaration (PHP 8.0 syntax, GLPI 10 runs on
+  PHP 7.4).
 - **Installer tests** run the installers unattended and drive their menus with scripted key presses,
   against `tests/installer/fake-glpi`, a fake console that records every call (and flags an API key
   passed on a command line).
-- **CI** (`.github/workflows/ci.yml`): syntax on PHP 7.4 to 8.4, unit tests on 7.4 and 8.3,
-  installers on Ubuntu and Windows (PowerShell 5.1 and 7), JavaScript syntax, translation catalogs up
-  to date and complete.
+- **CI** (`.github/workflows/ci.yml`): syntax on PHP 7.4 to 8.4, coding style, unit tests on 7.4
+  and 8.3, installers on Ubuntu and Windows (PowerShell 5.1 and 7), JavaScript syntax, translation
+  catalogs up to date and complete.
 
 ## Translations
 

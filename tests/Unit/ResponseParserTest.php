@@ -31,7 +31,7 @@ final class ResponseParserTest extends TestCase
     {
         $data = ResponseParser::parse(
             '{"type":"2","category_id":null,"confidence":0.8}',
-            ['type' => 'int', 'category_id' => '?int', 'confidence' => 'float', '?urgency' => 'int', '?keywords' => 'array']
+            ['type' => 'int', 'category_id' => '?int', 'confidence' => 'float', '?urgency' => 'int', '?keywords' => 'array'],
         );
         $this->assertSame(2, $data['type']);
         $this->assertNull($data['category_id']);

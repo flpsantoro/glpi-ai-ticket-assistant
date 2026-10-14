@@ -54,7 +54,7 @@ final class KnowledgePage
             __('Last synchronization: %1$s · waiting for distillation: %2$d · errors: %3$d', 'ticketassistant'),
             $stats['last_sync'] ?? '-',
             $stats['pending'],
-            $stats['errors']
+            $stats['errors'],
         )) . '</p>';
 
         // ---- Manual runs ----------------------------------------------------
@@ -132,7 +132,7 @@ final class KnowledgePage
             (int) $e['sample'],
             (string) $e['method'],
             number_format(((int) $e['duration_ms']) / 1000, 1),
-            (string) $e['date']
+            (string) $e['date'],
         )) . '</p>';
 
         if (!empty($e['calibration'])) {

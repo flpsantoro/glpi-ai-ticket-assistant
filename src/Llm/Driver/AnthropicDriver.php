@@ -153,7 +153,7 @@ class AnthropicDriver extends AbstractDriver
                 throw new LlmException(
                     LlmException::KIND_BAD_RESPONSE,
                     'Truncated answer: raise the maximum tokens',
-                    $http_code
+                    $http_code,
                 );
             }
             throw new LlmException(LlmException::KIND_BAD_RESPONSE, 'Empty answer (stop_reason: ' . $stop . ')', $http_code);

@@ -39,7 +39,7 @@ class SyncCommand extends Command
             $stats['added'],
             $stats['updated'],
             $stats['unchanged'],
-            $stats['removed']
+            $stats['removed'],
         ) . '</info>' . sprintf(' (%.1f s)', microtime(true) - $start));
         return 0;
     }

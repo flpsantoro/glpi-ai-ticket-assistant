@@ -196,7 +196,7 @@ final class Classifier
             "SELECT {$columns} FROM `" . CaseLibrary::TABLE . '`
              WHERE `itilcategories_id` > 0' . ($use_embeddings ? ' AND `embedding` IS NOT NULL' : '') . '
              ORDER BY `date_solved` DESC, `id` DESC
-             LIMIT ' . $sample
+             LIMIT ' . $sample,
         );
 
         $total      = 0;

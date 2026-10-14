@@ -188,7 +188,7 @@ final class TicketContext
         if (($options['history'] ?? true) !== false) {
             $followups = (new ITILFollowup())->find(
                 ['itemtype' => Ticket::class, 'items_id' => $tickets_id],
-                ['date_creation DESC', 'id DESC']
+                ['date_creation DESC', 'id DESC'],
             );
             $remaining = max(2000, $max_chars - mb_strlen($header) - mb_strlen($solutions_text) - mb_strlen($tasks_text) - 4000);
             $selected  = [];
@@ -228,7 +228,7 @@ final class TicketContext
             $attachments = Attachments::collect(
                 self::attachmentLinks($tickets_id, $see_private_followups, $see_private_tasks, $current_user),
                 $config,
-                $capabilities
+                $capabilities,
             );
         }
 
@@ -291,7 +291,7 @@ final class TicketContext
             $solutions = (new ITILSolution())->find(
                 ['itemtype' => Ticket::class, 'items_id' => (int) $ticket->getID(), 'NOT' => ['status' => CommonITILValidation::REFUSED]],
                 ['id DESC'],
-                1
+                1,
             );
             foreach ($solutions as $solution) {
                 $text .= "\nSolution: " . Text::toPlainText((string) $solution['content'], 2000);

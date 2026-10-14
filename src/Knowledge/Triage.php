@@ -166,7 +166,7 @@ final class Triage extends \CommonGLPI
         $task->log(sprintf(
             __('%1$d tickets classified, %2$d applied automatically', 'ticketassistant'),
             $result['processed'],
-            $result['auto_applied']
+            $result['auto_applied'],
         ));
         return $result['processed'] > 0 ? 1 : 0;
     }
@@ -257,7 +257,7 @@ final class Triage extends \CommonGLPI
                 SUM(t.`status` IN (5, 6) AND s.`category_suggested` > 0 AND t.`itilcategories_id` = s.`category_suggested`) AS correct
              FROM `" . self::TABLE . "` s
              LEFT JOIN `glpi_tickets` t ON t.`id` = s.`tickets_id`
-             WHERE s.`date_creation` >= {$since} AND s.`status` <> 'pending'"
+             WHERE s.`date_creation` >= {$since} AND s.`status` <> 'pending'",
         );
         $row = $rows[0] ?? [];
         $out = [];

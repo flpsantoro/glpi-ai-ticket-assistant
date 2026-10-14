@@ -204,14 +204,14 @@ final class Stats
                 $triage['total'],
                 $triage['applied'],
                 $triage['auto_applied'],
-                $triage['dismissed']
+                $triage['dismissed'],
             ));
             if ($triage['evaluated'] > 0) {
                 echo '<br>' . Text::e(sprintf(
                     __('Accuracy on solved tickets: %1$d%% (%2$d of %3$d kept the suggested category).', 'ticketassistant'),
                     round(100 * $triage['correct'] / $triage['evaluated']),
                     $triage['correct'],
-                    $triage['evaluated']
+                    $triage['evaluated'],
                 ));
             }
         }

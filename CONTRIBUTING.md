@@ -30,6 +30,7 @@ compatibility rules.
 ```bash
 composer install && vendor/bin/phpunit          # unit tests (PHP 7.4+)
 find . -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
+php-cs-fixer check --diff                       # coding style of GLPI plugins (fix: php-cs-fixer fix)
 bash tests/installer/installer-test.sh          # when install.sh changed
 python tools/i18n/i18n.py extract               # code -> locales/ticketassistant.pot
 python tools/i18n/i18n.py update                # new strings -> locales/*.po

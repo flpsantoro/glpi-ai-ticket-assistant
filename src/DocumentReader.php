@@ -267,7 +267,7 @@ final class DocumentReader
         $prefix = rtrim($tmp_dir, '/\\') . DIRECTORY_SEPARATOR . 'ticketassistant_pdf_' . getmypid() . '_' . bin2hex(random_bytes(4));
         @shell_exec(
             escapeshellarg($binary) . ' -png -r ' . max(50, min(200, $dpi)) . ' -f 1 -l ' . $pages . ' '
-            . escapeshellarg($path) . ' ' . escapeshellarg($prefix)
+            . escapeshellarg($path) . ' ' . escapeshellarg($prefix),
         );
 
         $images = [];
@@ -339,7 +339,7 @@ final class DocumentReader
                     $xml = str_replace(
                         ['</text:p>', '</text:h>', '<text:tab/>', '<text:line-break/>', '<text:s/>', '</table:table-cell>', '</table:table-row>'],
                         ["\n", "\n", "\t", "\n", ' ', "\t", "\n"],
-                        $xml
+                        $xml,
                     );
                     $text = self::xmlToText($xml);
                     break;

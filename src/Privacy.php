@@ -79,7 +79,7 @@ final class Privacy
                 static function (array $m) {
                     return self::luhn(preg_replace('/\D/', '', $m[0]) ?? '') ? '[CARD]' : $m[0];
                 },
-                $text
+                $text,
             ) ?? $text;
         }
         if (isset($enabled['iban'])) {
@@ -88,7 +88,7 @@ final class Privacy
                 static function (array $m) {
                     return self::ibanValid($m[0]) ? '[IBAN]' : $m[0];
                 },
-                $text
+                $text,
             ) ?? $text;
         }
         if (isset($enabled['cnpj'])) {
@@ -109,14 +109,14 @@ final class Privacy
                 . '|(?:\+1[\s.\-]?)?\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4}'
                 . ')(?![\w])/u',
                 '[PHONE]',
-                $text
+                $text,
             ) ?? $text;
         }
         if (isset($enabled['ipv4'])) {
             $text = preg_replace(
                 '/\b(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\b/',
                 '[IP]',
-                $text
+                $text,
             ) ?? $text;
         }
 

@@ -75,7 +75,7 @@ final class Diagnostics
             $response->model !== '' ? $response->model : $settings['model'],
             $response->durationMs,
             $response->totalTokens(),
-            number_format($response->costUsd, 4)
+            number_format($response->costUsd, 4),
         );
 
         $embedder = Config::embeddingClient($config);

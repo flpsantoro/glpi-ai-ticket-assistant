@@ -108,7 +108,7 @@ final class Client
         $start = microtime(true);
         [$http_code, $data] = $this->send(
             $this->driver->buildChat($request),
-            $request->timeout !== null ? (int) $request->timeout : (int) $this->settings['timeout']
+            $request->timeout !== null ? (int) $request->timeout : (int) $this->settings['timeout'],
         );
 
         $response             = $this->driver->parseChat($data, $http_code);
@@ -138,7 +138,7 @@ final class Client
 
         [, $data] = $this->send(
             $this->driver->buildEmbeddings(array_values($texts), $dimensions),
-            (int) $this->settings['timeout']
+            (int) $this->settings['timeout'],
         );
         $result = $this->driver->parseEmbeddings($data);
         if (count($result['vectors']) !== count($texts)) {
@@ -170,7 +170,7 @@ final class Client
         return round(
             ($prompt_tokens / 1e6) * (float) $this->settings['price_input']
             + ($completion_tokens / 1e6) * (float) $this->settings['price_output'],
-            6
+            6,
         );
     }
 
@@ -186,7 +186,7 @@ final class Client
         if (count($missing)) {
             throw new LlmException(
                 LlmException::KIND_CONFIG,
-                'Incomplete AI connection settings: ' . implode(', ', $missing)
+                'Incomplete AI connection settings: ' . implode(', ', $missing),
             );
         }
     }
@@ -231,7 +231,7 @@ final class Client
         if (is_callable($guard) && !$guard($spec['url'])) {
             throw new LlmException(
                 LlmException::KIND_CONFIG,
-                'Outbound URL refused (scheme, cloud metadata address or TICKETASSISTANT_URL_ALLOWLIST): ' . self::safeMessage($spec['url'])
+                'Outbound URL refused (scheme, cloud metadata address or TICKETASSISTANT_URL_ALLOWLIST): ' . self::safeMessage($spec['url']),
             );
         }
 
@@ -259,7 +259,7 @@ final class Client
             } catch (ConnectException $e) {
                 throw new LlmException(
                     self::isTimeout($e) ? LlmException::KIND_TIMEOUT : LlmException::KIND_NETWORK,
-                    self::safeMessage($e->getMessage())
+                    self::safeMessage($e->getMessage()),
                 );
             } catch (RequestException $e) {
                 if ($e->hasResponse()) {
@@ -267,7 +267,7 @@ final class Client
                 } else {
                     throw new LlmException(
                         self::isTimeout($e) ? LlmException::KIND_TIMEOUT : LlmException::KIND_NETWORK,
-                        self::safeMessage($e->getMessage())
+                        self::safeMessage($e->getMessage()),
                     );
                 }
             } catch (TransferException $e) {
@@ -291,7 +291,7 @@ final class Client
             throw new LlmException(
                 LlmException::KIND_BAD_RESPONSE,
                 'Answer is not JSON: ' . mb_substr(trim(strip_tags((string) $body)), 0, 200),
-                $http_code
+                $http_code,
             );
         }
 
@@ -314,7 +314,7 @@ final class Client
     {
         $json = json_encode(
             $body,
-            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE,
         );
         if ($json === false) {
             throw new LlmException(LlmException::KIND_CONFIG, 'Could not encode the request: ' . json_last_error_msg());

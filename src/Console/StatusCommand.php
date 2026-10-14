@@ -83,7 +83,7 @@ class StatusCommand extends Command
             'Connection  : %s, model "%s", key %s',
             (string) $preset['label'],
             $values['model'] !== '' ? $values['model'] : '-',
-            $values['api_key'] === '1' ? 'saved' : 'not set'
+            $values['api_key'] === '1' ? 'saved' : 'not set',
         ));
         $output->writeln('Address     : ' . ($values['base_url'] !== '' ? $values['base_url'] : '-'));
         $output->writeln(sprintf(
@@ -91,12 +91,12 @@ class StatusCommand extends Command
             $values['cases'],
             $values['distilled'],
             $values['embedded'],
-            $values['last_sync'] !== '' ? $values['last_sync'] : '-'
+            $values['last_sync'] !== '' ? $values['last_sync'] : '-',
         ));
         $output->writeln(sprintf(
             'Cost today  : US$ %s (daily budget of the technicians: %s)',
             $values['cost_today_usd'],
-            (float) $values['budget_usd'] > 0 ? 'US$ ' . $values['budget_usd'] : 'none'
+            (float) $values['budget_usd'] > 0 ? 'US$ ' . $values['budget_usd'] : 'none',
         ));
         $output->writeln('Automatic actions:');
         foreach ($crons as $name => $task) {
@@ -105,7 +105,7 @@ class StatusCommand extends Command
                 $name,
                 $task['active'] ? 'enabled' : 'disabled',
                 $task['cli'] ? 'CLI' : 'GLPI',
-                $task['lastrun'] ?? '-'
+                $task['lastrun'] ?? '-',
             ));
         }
         return 0;
