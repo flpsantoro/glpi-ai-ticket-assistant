@@ -14,19 +14,22 @@
         <long>
             <en>The assistant reads the whole ticket — description, history, tasks, solutions, screenshots and attached documents (PDF, Office, logs) — and gives the technician a summary, a technical strategy and a reply draft in the communication standard of the team. It rewrites drafts in six modes, suggests the type, category and urgency of tickets from the solved ones (with a measurable accuracy), can triage new tickets automatically and drafts knowledge base articles. Human in the loop: nothing is sent to the requester without the technician. Cost guard rails, audit log, statistics, personal data masking and per-category instructions are included. One code base for GLPI 10.0.11+, 11 and 12.</en>
             <pt>O assistente lê o chamado inteiro — descrição, histórico, tarefas, soluções, prints e documentos anexados (PDF, Office, logs) — e entrega ao técnico um resumo, uma estratégia técnica e um rascunho de resposta no padrão de comunicação da equipe. Reescreve rascunhos em seis modos, sugere tipo, categoria e urgência com base nos chamados resolvidos (com taxa de acerto mensurável), pode fazer a triagem automática dos novos chamados e redige artigos da base de conhecimento. Humano no controle: nada é enviado ao solicitante sem o técnico. Inclui controle de custos, log de auditoria, estatísticas, mascaramento de dados pessoais e instruções por categoria. Um único código para GLPI 10.0.11+, 11 e 12.</pt>
+            <es>El asistente lee el ticket completo — descripción, historial, tareas, soluciones, capturas de pantalla y documentos adjuntos (PDF, Office, logs) — y entrega al técnico un resumen, una estrategia técnica y un borrador de respuesta según el estándar de comunicación del equipo. Reescribe borradores en seis modos, sugiere el tipo, la categoría y la urgencia de los tickets a partir de los resueltos (con una precisión medible), puede clasificar automáticamente los tickets nuevos y redacta artículos de la base de conocimiento. El humano mantiene el control: nada se envía al solicitante sin el técnico. Incluye límites de costo, registro de auditoría, estadísticas, enmascaramiento de datos personales e instrucciones por categoría. Un único código para GLPI 10.0.11+, 11 y 12.</es>
+            <fr>L'assistant lit tout le ticket — description, historique, tâches, solutions, captures d'écran et documents joints (PDF, Office, logs) — et propose au technicien un résumé, une stratégie technique et un brouillon de réponse selon les règles de communication de l'équipe. Il réécrit les brouillons en six modes, suggère le type, la catégorie et l'urgence des tickets à partir des tickets résolus (avec une précision mesurable), peut trier automatiquement les nouveaux tickets et rédige des articles de la base de connaissances. L'humain garde la main : rien n'est envoyé au demandeur sans le technicien. Garde-fous de coût, journal d'audit, statistiques, masquage des données personnelles et instructions par catégorie inclus. Un seul code pour GLPI 10.0.11+, 11 et 12.</fr>
         </long>
     </description>
     <homepage>https://github.com/flpsantoro/glpi-ai-ticket-assistant</homepage>
     <download>https://github.com/flpsantoro/glpi-ai-ticket-assistant/releases</download>
     <issues>https://github.com/flpsantoro/glpi-ai-ticket-assistant/issues</issues>
     <readme>https://github.com/flpsantoro/glpi-ai-ticket-assistant/blob/main/README.md</readme>
+    <changelog>https://github.com/flpsantoro/glpi-ai-ticket-assistant/blob/main/CHANGELOG.md</changelog>
     <authors>
         <author>Felipe Santoro Alcantara</author>
     </authors>
     <versions>
         <version>
             <num>1.0.0</num>
-            <compatibility>~10.0</compatibility>
+            <compatibility>~10.0.11</compatibility>
             <compatibility>~11.0</compatibility>
             <compatibility>~12.0</compatibility>
             <download_url>https://github.com/flpsantoro/glpi-ai-ticket-assistant/releases/download/v1.0.0/ticketassistant-1.0.0.tar.bz2</download_url>
@@ -48,6 +51,22 @@
             <tag>Classification</tag>
             <tag>Knowledge base</tag>
         </en>
+        <fr>
+            <tag>IA</tag>
+            <tag>LLM</tag>
+            <tag>Ticket</tag>
+            <tag>Assistance</tag>
+            <tag>Classification</tag>
+            <tag>Base de connaissances</tag>
+        </fr>
+        <es>
+            <tag>IA</tag>
+            <tag>LLM</tag>
+            <tag>Tickets</tag>
+            <tag>Mesa de ayuda</tag>
+            <tag>Clasificación</tag>
+            <tag>Base de conocimiento</tag>
+        </es>
         <pt>
             <tag>IA</tag>
             <tag>Chamados</tag>
@@ -55,4 +74,11 @@
             <tag>Classificação</tag>
         </pt>
     </tags>
+    <screenshots>
+        <screenshot>https://raw.githubusercontent.com/flpsantoro/glpi-ai-ticket-assistant/main/docs/images/analysis.png</screenshot>
+        <screenshot>https://raw.githubusercontent.com/flpsantoro/glpi-ai-ticket-assistant/main/docs/images/reply.png</screenshot>
+        <screenshot>https://raw.githubusercontent.com/flpsantoro/glpi-ai-ticket-assistant/main/docs/images/improve.png</screenshot>
+        <screenshot>https://raw.githubusercontent.com/flpsantoro/glpi-ai-ticket-assistant/main/docs/images/classification.png</screenshot>
+        <screenshot>https://raw.githubusercontent.com/flpsantoro/glpi-ai-ticket-assistant/main/docs/images/learning.png</screenshot>
+    </screenshots>
 </root>
