@@ -1,0 +1,47 @@
+# Real containers for the CI job "Docker" (.github/workflows/ci.yml): the
+# official GLPI image, as an administrator would run it, and MariaDB. The
+# installer then puts the plugin into the container named "glpi".
+#
+#   GLPI_VERSION=11.0.11 docker compose -f tests/docker/compose.yml up -d
+#
+# The image installs GLPI on its first start (account glpi / glpi). Passwords
+# below are for this throwaway test environment only.
+
+name: ticketassistant-ci
+
+services:
+  db:
+    image: mariadb:10.11
+    environment:
+      MARIADB_ROOT_PASSWORD: root-ci-only
+      MARIADB_DATABASE: glpi
+      MARIADB_USER: glpi
+      MARIADB_PASSWORD: glpi-ci-only
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+
+  glpi:
+    image: glpi/glpi:${GLPI_VERSION:-11.0.11}
+    container_name: glpi
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GLPI_DB_HOST: db
+      GLPI_DB_PORT: "3306"
+      GLPI_DB_NAME: glpi
+      GLPI_DB_USER: glpi
+      GLPI_DB_PASSWORD: glpi-ci-only
+    # The mock AI provider runs on the host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - glpi-data:/var/glpi
+    ports:
+      - "8080:80"
+
+volumes:
+  glpi-data:

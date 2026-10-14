@@ -83,6 +83,59 @@ jobs:
         shell: pwsh
         run: .\tests\installer\installer-test.ps1 -PhpExe (Get-Command php).Source
 
+  docker:
+    name: Docker (GLPI ${{ matrix.glpi }})
+    # install.sh against real containers: the official GLPI image and a mock AI provider
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        glpi: ['10.0.28', '11.0.11', '12.0.0']
+    env:
+      GLPI_VERSION: ${{ matrix.glpi }}
+      COMPOSE_FILE: tests/docker/compose.yml
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Mock AI provider
+        run: nohup python tools/mock-llm/server.py --port 8099 --log "$RUNNER_TEMP/mock.jsonl" >"$RUNNER_TEMP/mock.txt" 2>&1 &
+      - name: GLPI ${{ matrix.glpi }} and MariaDB
+        run: |
+          docker compose up -d
+          # The image installs GLPI on its first start, then starts Apache
+          for attempt in $(seq 1 90); do
+            curl -fsS -o /dev/null http://localhost:8080/ && break
+            sleep 5
+          done
+          docker exec glpi php bin/console --version
+      - name: Installation in the container (unattended)
+        run: |
+          bash install.sh --yes --lang en --docker glpi --provider compatible --base-url http://host.docker.internal:8099/v1 \
+            --model mock-vision-1 --demo --sync yes --cron no --poppler no | tee "$RUNNER_TEMP/install.txt"
+          docker exec glpi php bin/console plugins:ticketassistant:status --porcelain | tee "$RUNNER_TEMP/status.txt"
+          grep -qx 'enabled=1' "$RUNNER_TEMP/status.txt"
+          grep -qx 'ready=1' "$RUNNER_TEMP/status.txt"
+          grep -q 'connection OK' "$RUNNER_TEMP/install.txt"
+          grep -q 'Cron found in the container' "$RUNNER_TEMP/install.txt"
+          # The plugin in the container reached the mock provider of the host
+          grep -c '"model": "mock-vision-1"' "$RUNNER_TEMP/mock.jsonl"
+      - name: Demonstration data and library of solved tickets
+        run: grep -qx 'cases=40' "$RUNNER_TEMP/status.txt"
+      - name: Update and uninstallation
+        run: |
+          bash install.sh --yes --lang en --docker glpi --skip-ai --sync no --cron no --poppler no | tee "$RUNNER_TEMP/update.txt"
+          grep -q 'Previous version saved' "$RUNNER_TEMP/update.txt"
+          bash install.sh --yes --lang en --docker glpi --uninstall
+          docker exec glpi sh -c '! test -e /var/glpi/marketplace/ticketassistant && ! test -e /var/www/glpi/plugins/ticketassistant'
+          ! docker exec glpi php bin/console plugins:ticketassistant:status --porcelain
+      - name: Logs of the containers
+        if: failure()
+        run: |
+          docker compose logs --tail 80
+          tail -n 40 "$RUNNER_TEMP/mock.txt"
+
   assets:
     name: JavaScript and translations
     runs-on: ubuntu-latest

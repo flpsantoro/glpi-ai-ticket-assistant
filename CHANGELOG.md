@@ -14,6 +14,7 @@ every release updates `PLUGIN_TICKETASSISTANT_VERSION` in `setup.php`.
   of the container or of the host, backups on the host. Options `--docker` / `-Docker` and
   `-WebUser`.
 - The installers update the plugin where GLPI loads it, its marketplace folder included.
+- CI: the installer against the official GLPI images 10, 11 and 12 (job "Docker").
 
 ### Changed
 - Coding style of the GLPI plugins baseline (PER Coding Style 3.0 with PHP-CS-Fixer), checked by
