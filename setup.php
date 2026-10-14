@@ -125,14 +125,14 @@ function plugin_version_ticketassistant()
 /**
  * Check pre-requisites before install - OPTIONAL.
  *
+ * GLPI checks the versions and the PHP extensions declared in the
+ * "requirements" of plugin_version_ticketassistant(), with its own
+ * translated messages.
+ *
  * @return boolean
  */
 function plugin_ticketassistant_check_prerequisites()
 {
-    if (!extension_loaded('curl') || !extension_loaded('mbstring')) {
-        echo 'The PHP extensions curl and mbstring are required.';
-        return false;
-    }
     return true;
 }
 
