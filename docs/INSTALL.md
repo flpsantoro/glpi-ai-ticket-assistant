@@ -3,6 +3,7 @@
 - [Requirements](#requirements)
 - [Installer for Linux](#installer-for-linux)
 - [Installer for Windows](#installer-for-windows)
+- [GLPI in a container](#glpi-in-a-container)
 - [Manual installation](#manual-installation)
 - [Automatic actions (cron)](#automatic-actions-cron)
 - [Rights](#rights)
@@ -44,14 +45,16 @@ asking, and each step can be skipped:
 1. **System**: PHP binaries (the one in the `PATH`, `/usr/bin/php8.x`, Remi collections…), PHP
    extensions, copy tool.
 2. **GLPI**: searches the usual folders (`/var/www`, `/srv`, `/opt`, `/usr/share/glpi`, home
-   folders) and the document roots declared in Apache and nginx, shows each GLPI with its version and
-   the version of the plugin already in it. It picks a PHP able to run that GLPI (GLPI 11 needs PHP
+   folders), the document roots declared in Apache and nginx and the running containers (see
+   [GLPI in a container](#glpi-in-a-container)), shows each GLPI with its version and the version of
+   the plugin already in it. It picks a PHP able to run that GLPI (GLPI 11 needs PHP
    8.2) and the web server user (owner of the GLPI files, `GLPI_VAR_DIR` included).
 3. **Plugin**: copies the plugin (only the files of the plugin: no tests, documentation or tools)
-   or links it to the repository (development: a `git pull` updates GLPI). The previous version is
-   saved in `/var/backups/glpi-ticketassistant/` first. The GLPI console then installs and enables
-   the plugin **as the web server user**, so that GLPI's cache files keep the right owner. On SELinux
-   systems the security context is restored.
+   or links it to the repository (development: a `git pull` updates GLPI), where GLPI loads it: its
+   marketplace folder when the plugin is already there, `plugins/` otherwise. The previous version is
+   saved in `/var/backups/glpi-ticketassistant/` first (`TICKETASSISTANT_BACKUP_DIR`: another
+   folder). The GLPI console then installs and enables the plugin **as the web server user**, so that
+   GLPI's cache files keep the right owner. On SELinux systems the security context is restored.
 4. **AI**: menu of the providers, address when relevant (Azure resource, Ollama, local servers),
    key typed hidden (it reaches GLPI through the standard input, never on a command line), list of
    the models offered by the provider with a filter, connection test, then optional language,
@@ -78,9 +81,10 @@ OPENAI_API_KEY=sk-... sudo -E bash install.sh --yes --glpi /var/www/glpi \
 
 | Option | Meaning |
 |---|---|
-| `--glpi PATH` | GLPI folder (default: detected; required when several are found) |
+| `--glpi PATH` | GLPI folder (default: detected; required when several are found; with `--docker`, inside the container) |
+| `--docker CONTAINER` | GLPI in this running container (Docker, Podman) |
 | `--php PATH` | PHP binary that runs the GLPI console |
-| `--web-user USER` | owner of the GLPI files |
+| `--web-user USER` | owner of the GLPI files (in a container too) |
 | `--glpi-user LOGIN` | GLPI super-admin login used by the installation (default `glpi`) |
 | `--mode copy\|link` | copy the plugin (default) or link it to the repository |
 | `--provider ID` | `openai`, `azure`, `anthropic`, `gemini`, `mistral`, `openrouter`, `ollama`, `compatible` |
@@ -88,7 +92,7 @@ OPENAI_API_KEY=sk-... sudo -E bash install.sh --yes --glpi /var/www/glpi \
 | `--api-key-env VAR` | environment variable holding the API key |
 | `--skip-ai` | do not configure the provider |
 | `--sync yes\|no` | build the library of solved tickets (default yes) |
-| `--cron yes\|no` | create `/etc/cron.d/glpi-cron` when missing |
+| `--cron yes\|no` | create `/etc/cron.d/glpi-cron` (container: `glpi-cron-CONTAINER`) when missing |
 | `--poppler yes\|no` | install poppler-utils when missing |
 | `--demo` | demonstration data (test instances only) |
 | `--status`, `--configure`, `--uninstall` | run only that part |
@@ -117,14 +121,65 @@ Same steps as on Linux, adapted to Windows:
 - When a folder needs it (`C:\inetpub`, `Program Files`) or for the scheduled task, the installer
   offers to restart itself as administrator.
 
-Options: `-GlpiPath`, `-Php`, `-Mode Copy|Link`, `-GlpiUser`, `-Provider`, `-BaseUrl`, `-Model`,
-`-ApiVersion`, `-ApiKeyEnv`, `-SkipAi`, `-Sync yes|no`, `-Cron yes|no`, `-Demo`, `-Status`,
-`-Configure`, `-Uninstall`, `-Lang en|pt`, `-Yes`, `-NoColor`, `-Help`.
+Options: `-GlpiPath`, `-Docker`, `-Php`, `-WebUser`, `-Mode Copy|Link`, `-GlpiUser`, `-Provider`,
+`-BaseUrl`, `-Model`, `-ApiVersion`, `-ApiKeyEnv`, `-SkipAi`, `-Sync yes|no`, `-Cron yes|no`, `-Demo`,
+`-Status`, `-Configure`, `-Uninstall`, `-Lang en|pt`, `-Yes`, `-NoColor`, `-Help`.
 
 ```powershell
 $env:OPENAI_API_KEY = 'sk-...'
 .\install.ps1 -Yes -GlpiPath C:\xampp\htdocs\glpi -Provider openai -Model gpt-5-mini -ApiKeyEnv OPENAI_API_KEY -Cron yes
 ```
+
+## GLPI in a container
+
+Both installers also work when GLPI runs in a container: Docker or Podman on Linux, Docker
+Desktop or Podman on Windows. They search the running containers whose PHP sees a GLPI in the usual
+folders (`/var/www/glpi`, `/var/www/html`, `/usr/share/glpi`…), list them next to the local
+installations (`GLPI 11.0.11  container glpi → /var/www/glpi`) and work through the container
+command:
+
+- **Reading**: a short read-only PHP script, run with `docker exec` in each running container,
+  finds GLPI, its version and the plugin already installed. The PHP of the container is the only
+  program used, so any GLPI image works.
+- **Console**: `docker exec -u <owner of the GLPI files>` (`www-data` in the official image) runs
+  the GLPI console; the API key goes through the standard input of `docker exec -i`, never on a
+  command line. No PHP is needed on the host.
+- **Files**: the plugin is copied with `docker cp` into a new folder next to the old one, which it
+  then replaces in one move; owner and permissions are set as root in the container. The previous
+  version is saved on the host first.
+- **Kept when the container is recreated**: the plugin goes where GLPI already finds it, otherwise
+  into `plugins/` when that folder is on a volume, otherwise into the marketplace folder of GLPI
+  when it is on a volume, as in the official `glpi/glpi` image for GLPI 11 and 12
+  (`/var/glpi/marketplace`). When neither is, the installer warns: an image update recreates the
+  container and removes the plugin, so mount the folder as a volume or run the installer again.
+- **Mounted from the host** (a development checkout): the folder is used as it is, nothing is
+  copied over it.
+- **AI address**: inside the container, `localhost` is the container itself. For a local server
+  (Ollama, LM Studio…) the installer proposes the address of the host seen from the container
+  (`host.docker.internal` on Docker Desktop, otherwise the gateway of the network of the
+  container, e.g. `172.17.0.1`); the server must listen on that interface (`OLLAMA_HOST=0.0.0.0`).
+- **Cron**: the official image runs the cron of GLPI itself (supervisor job), and the installer
+  finds it. Otherwise, on Linux, it offers `/etc/cron.d/glpi-cron-<container>`, which runs
+  `docker exec -u www-data <container> php /var/www/glpi/front/cron.php` every minute; on Windows it
+  shows that command for a scheduled task.
+- **PDF tools**: `poppler-utils` is looked for in the container. Add it to the image: a package
+  installed in a running container is lost when the container is recreated.
+- **Rights**: on Linux no root is needed when the user can run `docker` (group `docker`) or
+  rootless Podman.
+
+```bash
+bash install.sh --docker glpi                      # this container, every question asked
+bash install.sh --yes --docker glpi --provider ollama --base-url http://172.17.0.1:11434/v1 --model gemma3
+```
+
+```powershell
+.\install.ps1 -Docker glpi
+.\install.ps1 -Yes -Docker glpi -Provider ollama -BaseUrl http://host.docker.internal:11434/v1 -Model gemma3
+```
+
+The container command is `docker`, or `podman` when Docker is missing; `TICKETASSISTANT_DOCKER`
+chooses another one. The job "Docker" of the CI installs the plugin this way in the official images
+of GLPI 10, 11 and 12.
 
 ## Manual installation
 
@@ -158,8 +213,9 @@ They are registered in CLI mode: GLPI runs them only when its cron runs from the
 
 - Linux: `* * * * * www-data /usr/bin/php /var/www/glpi/front/cron.php` in `/etc/cron.d/glpi-cron`.
 - Windows: scheduled task every minute running `php.exe C:\...\glpi\front\cron.php`.
-- Docker: a cron in the container, or `docker exec -u www-data <container> php front/cron.php`
-  from the host.
+- Docker: the official image runs it in the container; otherwise
+  `docker exec -u www-data <container> php front/cron.php` from the host (see
+  [GLPI in a container](#glpi-in-a-container)).
 
 Check **Setup > Automatic actions** (filter on "AI Ticket Assistant"): the last run date must
 move. They can also be run by hand: `php front/cron.php --force aisync`.

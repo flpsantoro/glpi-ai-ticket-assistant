@@ -60,7 +60,13 @@ switch ($command) {
         if (($options['username'] ?? '') !== 'glpi') {
             $finish(1, 'User "' . ($options['username'] ?? '') . '" not found.');
         }
-        if (!is_file($root . '/plugins/ticketassistant/setup.php')) {
+        // Like GLPI: the marketplace folder first, then plugins/
+        $marketplace = (string) getenv('GLPI_MARKETPLACE_DIR') ?: $root . '/marketplace';
+        if (is_file($marketplace . '/ticketassistant/setup.php')) {
+            $state['folder'] = 'marketplace';
+        } elseif (is_file($root . '/plugins/ticketassistant/setup.php')) {
+            $state['folder'] = 'plugins';
+        } else {
             $finish(1, 'Plugin "ticketassistant" not found.');
         }
         $state['installed'] = true;

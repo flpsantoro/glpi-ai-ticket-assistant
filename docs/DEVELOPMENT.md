@@ -139,7 +139,8 @@ node --check public/js/assistant.js public/js/config.js
   PHP 7.4).
 - **Installer tests** run the installers unattended and drive their menus with scripted key presses,
   against `tests/installer/fake-glpi`, a fake console that records every call (and flags an API key
-  passed on a command line).
+  passed on a command line), and `tests/installer/fake-docker`, a fake `docker` (PHP) whose container
+  "glpi-app" lives in a folder: detection, copy, volumes, mounted folder, backup, uninstallation.
 - **CI** (`.github/workflows/ci.yml`): syntax on PHP 7.4 to 8.4, coding style, unit tests on 7.4
   and 8.3, installers on Ubuntu and Windows (PowerShell 5.1 and 7), JavaScript syntax, translation
   catalogs up to date and complete.

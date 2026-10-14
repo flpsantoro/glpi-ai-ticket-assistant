@@ -5,9 +5,10 @@
 #  From the cloned repository:   sudo ./install.sh
 #  Help and unattended mode:     ./install.sh --help
 #
-#  Finds the GLPI installations of the server, copies (or links) the plugin,
-#  installs and enables it with the GLPI console, connects the AI provider,
-#  builds the library of solved tickets and checks the cron and the PDF tools.
+#  Finds the GLPI installations of the server and of its containers (Docker,
+#  Podman), copies (or links) the plugin, installs and enables it with the
+#  GLPI console, connects the AI provider, builds the library of solved
+#  tickets and checks the cron and the PDF tools.
 #  Nothing is changed without asking (or --yes).
 #
 #  SPDX-License-Identifier: GPL-2.0-or-later
@@ -33,7 +34,7 @@ LOG_FILE="${TMPDIR:-/tmp}/ticketassistant-install-$(date +%Y%m%d-%H%M%S).log"
 # Files of the repository that are not part of the plugin
 COPY_EXCLUDES=(.git .github docs tests tools vendor node_modules install.sh install.ps1 composer.json
     composer.lock phpunit.xml.dist .phpunit.result.cache .phpunit.cache .gitattributes .gitignore
-    .editorconfig CONTRIBUTING.md)
+    .editorconfig .php-cs-fixer.dist.php .php-cs-fixer.cache CONTRIBUTING.md)
 
 # Providers: id, default address, key page, model suggestions
 PROVIDERS=(openai azure anthropic gemini mistral openrouter ollama compatible)
@@ -56,7 +57,7 @@ declare -A PROVIDER_MODELS=(
 # -----------------------------------------------------------------------------
 # Options
 # -----------------------------------------------------------------------------
-OPT_GLPI="" OPT_PHP="" OPT_WEB_USER="" OPT_LOGIN="" OPT_MODE="" OPT_LANG="" OPT_ACTION=""
+OPT_GLPI="" OPT_DOCKER="" OPT_PHP="" OPT_WEB_USER="" OPT_LOGIN="" OPT_MODE="" OPT_LANG="" OPT_ACTION=""
 OPT_PROVIDER="" OPT_BASE_URL="" OPT_MODEL="" OPT_API_VERSION="" OPT_KEY_ENV=""
 OPT_SKIP_AI=0 OPT_SYNC="" OPT_CRON="" OPT_POPPLER="" OPT_DEMO=0 OPT_YES=0 OPT_NO_COLOR=0 OPT_HELP=0
 
@@ -68,6 +69,7 @@ set -- "${normalized[@]}"
 while (($#)); do
     case $1 in
         --glpi) OPT_GLPI=${2:-}; shift ;;
+        --docker) OPT_DOCKER=${2:-}; shift ;;
         --php) OPT_PHP=${2:-}; shift ;;
         --web-user) OPT_WEB_USER=${2:-}; shift ;;
         --glpi-user) OPT_LOGIN=${2:-}; shift ;;
@@ -130,6 +132,7 @@ declare -A MSG_EN=(
     [continue_anyway]="Continue anyway?"
     [php_found]="PHP %s  %s"
     [php_missing]="PHP CLI not found. Install it (apt install php-cli, dnf install php-cli) or use --php PATH."
+    [php_missing_docker]="PHP CLI not found on this server: only a GLPI in a container can receive the plugin."
     [ext_ok]="PHP extensions: %s"
     [ext_missing]="Missing PHP extensions on the command line: %s"
     [ext_hint]="Install them for the PHP of the web server too (e.g. apt install php-curl php-mbstring php-gd php-zip) and restart it."
@@ -249,6 +252,7 @@ declare -A MSG_EN=(
     [s_log]="Log"
     [mode_copy_short]="copied"
     [mode_link_short]="linked to the repository"
+    [mode_mount_short]="folder mounted from the server"
     [ai_not_configured]="not configured"
     [test_ok]="connection OK"
     [test_failed]="connection test failed"
@@ -272,7 +276,25 @@ declare -A MSG_EN=(
     [uninstalled]="The plugin was uninstalled."
     [cancelled]="Cancelled."
     [log_at]="Full log: %s"
-    [unattended_glpi]="Unattended mode: use --glpi PATH (%d installations found)."
+    [unattended_glpi]="Unattended mode: use --glpi PATH or --docker CONTAINER (%d installations found)."
+    [docker_where]="container %s → %s"
+    [docker_unavailable]="Docker (or Podman) does not answer: is it installed and running, and can this user run it?"
+    [docker_no_glpi]="No GLPI found in the container %s (is it running?): use --glpi PATH, the folder of GLPI inside the container."
+    [docker_no_access]="Docker (or Podman) is installed but does not answer to this user: run the installer with sudo to search the containers too."
+    [docker_not_glpi]="%s is not a GLPI folder in the container %s."
+    [docker_php]="PHP %s in the container"
+    [docker_ext_hint]="Add them to the image of the container."
+    [docker_no_link]="A container cannot be linked to this repository: the files are copied."
+    [docker_mounted]="The folder %s of the container is mounted from %s on this server: it is used as it is (update the files there)."
+    [docker_mounted_kept]="The folder %s of the container is mounted from %s on this server: its files are left in place."
+    [docker_volume]="Plugin folder on a volume of the container: %s"
+    [docker_no_volume]="The folder %s of the container is not on a volume: recreating the container (after an image update, for example) removes the plugin. Mount it as a volume, or run this installer again after recreating the container."
+    [docker_url_hint]="Inside the container, localhost is the container itself: use the address of this server as seen from the container (%s). The AI server must accept those connections (Ollama: OLLAMA_HOST=0.0.0.0)."
+    [docker_cron_found]="Cron found in the container (%s): the automatic actions run in the background."
+    [docker_cron_missing]="No cron runs the automatic actions of GLPI in the container: the library sync (aisync), learning (ailearn), triage (aitriage) and log purge (aipurge) run in CLI mode."
+    [docker_cron_create]="Create %s on this server (it runs the cron of GLPI in the container every minute)?"
+    [docker_cron_manual]="Add this line to the crontab of %s on this server:"
+    [docker_poppler_missing]="poppler-utils is not in the container: the built-in reader extracts the text of digital PDFs, but scanned PDFs are not read. Add poppler-utils to the image (packages installed in a running container are lost when it is recreated)."
     [menu_hint]="↑↓ move · Enter choose"
     [filter_hint]="↑↓ move · type to filter · Enter choose · Esc type a name"
     [filter_label]="Filter"
@@ -293,6 +315,7 @@ declare -A MSG_PT=(
     [need_root]="Sem root: copiar para o diretório web e rodar o console do GLPI como o usuário do servidor web geralmente exigem sudo ./install.sh"
     [continue_anyway]="Continuar mesmo assim?"
     [php_missing]="PHP CLI não encontrado. Instale (apt install php-cli, dnf install php-cli) ou use --php CAMINHO."
+    [php_missing_docker]="PHP CLI não encontrado neste servidor: só um GLPI em contêiner pode receber o plugin."
     [ext_ok]="Extensões do PHP: %s"
     [ext_missing]="Extensões do PHP ausentes na linha de comando: %s"
     [ext_hint]="Instale-as também para o PHP do servidor web (ex.: apt install php-curl php-mbstring php-gd php-zip) e reinicie-o."
@@ -405,6 +428,7 @@ declare -A MSG_PT=(
     [s_library]="Biblioteca"
     [mode_copy_short]="copiado"
     [mode_link_short]="vinculado ao repositório"
+    [mode_mount_short]="pasta montada do servidor"
     [ai_not_configured]="não configurada"
     [test_ok]="conexão OK"
     [test_failed]="o teste de conexão falhou"
@@ -428,7 +452,25 @@ declare -A MSG_PT=(
     [uninstalled]="O plugin foi desinstalado."
     [cancelled]="Cancelado."
     [log_at]="Log completo: %s"
-    [unattended_glpi]="Modo não interativo: use --glpi CAMINHO (%d instalações encontradas)."
+    [unattended_glpi]="Modo não interativo: use --glpi CAMINHO ou --docker CONTÊINER (%d instalações encontradas)."
+    [docker_where]="contêiner %s → %s"
+    [docker_unavailable]="O Docker (ou o Podman) não responde: está instalado e em execução, e este usuário pode usá-lo?"
+    [docker_no_glpi]="Nenhum GLPI encontrado no contêiner %s (ele está em execução?): use --glpi CAMINHO, a pasta do GLPI dentro do contêiner."
+    [docker_no_access]="O Docker (ou o Podman) está instalado, mas não responde a este usuário: execute o instalador com sudo para procurar também nos contêineres."
+    [docker_not_glpi]="%s não é uma pasta do GLPI no contêiner %s."
+    [docker_php]="PHP %s no contêiner"
+    [docker_ext_hint]="Adicione-as à imagem do contêiner."
+    [docker_no_link]="Um contêiner não pode ser vinculado a este repositório: os arquivos são copiados."
+    [docker_mounted]="A pasta %s do contêiner é montada de %s neste servidor: ela é usada como está (atualize os arquivos lá)."
+    [docker_mounted_kept]="A pasta %s do contêiner é montada de %s neste servidor: seus arquivos são mantidos."
+    [docker_volume]="Pasta do plugin em um volume do contêiner: %s"
+    [docker_no_volume]="A pasta %s do contêiner não está em um volume: recriar o contêiner (após atualizar a imagem, por exemplo) remove o plugin. Monte-a como volume ou rode este instalador de novo depois de recriar o contêiner."
+    [docker_url_hint]="Dentro do contêiner, localhost é o próprio contêiner: use o endereço deste servidor visto do contêiner (%s). O servidor de IA precisa aceitar essas conexões (Ollama: OLLAMA_HOST=0.0.0.0)."
+    [docker_cron_found]="Cron encontrado no contêiner (%s): as ações automáticas rodam em segundo plano."
+    [docker_cron_missing]="Nenhum cron executa as ações automáticas do GLPI no contêiner: a sincronização da biblioteca (aisync), o aprendizado (ailearn), a triagem (aitriage) e a limpeza do log (aipurge) rodam em modo CLI."
+    [docker_cron_create]="Criar %s neste servidor (executa o cron do GLPI no contêiner a cada minuto)?"
+    [docker_cron_manual]="Adicione esta linha ao crontab de %s neste servidor:"
+    [docker_poppler_missing]="O poppler-utils não está no contêiner: o leitor embutido extrai o texto de PDFs digitais, mas PDFs digitalizados não são lidos. Adicione o poppler-utils à imagem (pacotes instalados em um contêiner em execução se perdem quando ele é recriado)."
     [menu_hint]="↑↓ mover · Enter escolher"
     [filter_hint]="↑↓ mover · digite para filtrar · Enter escolher · Esc digitar um nome"
     [filter_label]="Filtro"
@@ -454,11 +496,13 @@ Usage: sudo ./install.sh [options]
 
 Without options the installer asks every question in a terminal menu.
 
-  --glpi PATH          GLPI folder (default: detected)
+  --glpi PATH          GLPI folder (default: detected; with --docker, inside the container)
+  --docker CONTAINER   GLPI in a running container (Docker or Podman, default: detected):
+                       the console runs with "docker exec", the plugin is copied with "docker cp"
   --php PATH           PHP binary that runs the GLPI console (default: detected)
   --web-user USER      owner of the GLPI files (default: detected)
   --glpi-user LOGIN    GLPI super-admin login used by the installation (default: glpi)
-  --mode copy|link     copy the plugin (default) or link it to the repository
+  --mode copy|link     copy the plugin (default) or link it to the repository (containers: copy)
   --provider ID        AI provider: ${PROVIDERS[*]}
   --base-url URL       API address (Azure resource, local server…)
   --model NAME         model (Azure: deployment name)
@@ -466,7 +510,8 @@ Without options the installer asks every question in a terminal menu.
   --api-key-env VAR    read the API key from the environment variable VAR
   --skip-ai            do not configure the AI provider
   --sync yes|no        build the library of solved tickets (default: yes)
-  --cron yes|no        create /etc/cron.d/glpi-cron when no GLPI cron exists
+  --cron yes|no        create /etc/cron.d/glpi-cron (container: glpi-cron-CONTAINER) when no
+                       GLPI cron exists
   --poppler yes|no     install poppler-utils when missing
   --demo               create demonstration data (test instances only)
   --status             show the state of the assistant and test the connection
@@ -477,9 +522,14 @@ Without options the installer asks every question in a terminal menu.
   --no-color           plain output
   -h, --help           this help
 
-Unattended example:
+Unattended examples:
   OPENAI_API_KEY=sk-... sudo -E ./install.sh --yes --glpi /var/www/glpi \\
       --provider openai --model gpt-5-mini --api-key-env OPENAI_API_KEY --cron yes
+  ./install.sh --yes --docker glpi --provider ollama --base-url http://172.17.0.1:11434/v1 --model gemma3
+
+The container command is docker, or podman when docker is missing
+(TICKETASSISTANT_DOCKER=command to choose another one). Previous versions are
+saved in /var/backups/glpi-ticketassistant (TICKETASSISTANT_BACKUP_DIR=folder).
 EOF
 }
 
@@ -909,9 +959,316 @@ last_output_line() { sed 's/\x1b\[[0-9;]*m//g' "$RUN_OUT" 2>/dev/null | grep -v 
 version_ge() { [[ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | head -n1)" == "$2" ]]; }
 version_gt() { [[ $1 != "$2" ]] && version_ge "$1" "$2"; }
 
-GLPI="" GLPI_VERSION="" PHP="" PHP_VERSION="" WEB_USER="" CONSOLE_EXTRA=()
+GLPI="" GLPI_VERSION="" GLPI_WHERE="" PHP="" PHP_VERSION="" WEB_USER="" CONSOLE_EXTRA=() PLUGIN_DIR=""
+
+# Value of a GLPI_* constant written in the files of GLPI (the first definition wins, as in GLPI)
+glpi_define() { # glpi_define CONSTANT GLPI_FOLDER
+    local file value
+    for file in "$2/config/local_define.php" "$2/inc/downstream.php"; do
+        value=$(sed -n "s/.*define *( *['\"]$1['\"] *, *['\"]\([^'\"]*\)['\"].*/\1/p" "$file" 2>/dev/null | head -n1)
+        [[ -n $value ]] && { printf '%s' "$value"; return 0; }
+    done
+    return 1
+}
+
+# -----------------------------------------------------------------------------
+# GLPI in a container (Docker, Podman): the files are read with the PHP of the
+# container (the only program every GLPI image has), the console runs with
+# "docker exec" and the plugin is copied with "docker cp"
+# -----------------------------------------------------------------------------
+DOCKER="" DOCKER_CMD=() DOCKER_STDIN=0
+DOCKER_GLPI_DIRS=(/var/www/glpi /var/www/html/glpi /var/www/html /usr/share/glpi /srv/www/glpi /opt/glpi /app /var/www)
+
+# php -r PROBE OPERATION ARGUMENT…: reads the files of a container. Same code in
+# install.ps1, without double quotes so that it survives the command line of Windows
+PHP_PROBE=""
+read -r -d '' PHP_PROBE <<'PHP' || true
+$a = array_slice($argv, 1);
+$op = (string) array_shift($a);
+$owner = function ($path) {
+    $uid = @fileowner($path);
+    if ($uid === false) {
+        return '';
+    }
+    if (function_exists('posix_getpwuid')) {
+        $user = posix_getpwuid($uid);
+        if ($user) {
+            return $user['name'];
+        }
+    }
+    return (string) $uid;
+};
+$constant = function ($glpi, $name) {
+    $value = getenv($name);
+    if (is_string($value) && $value !== '') {
+        return $value;
+    }
+    foreach (array($glpi . '/config/local_define.php', $glpi . '/inc/downstream.php') as $file) {
+        if (preg_match('/define\(\s*[\x27\x22]' . $name . '[\x27\x22]\s*,\s*[\x27\x22]([^\x27\x22]+)[\x27\x22]/', (string) @file_get_contents($file), $m)) {
+            return $m[1];
+        }
+    }
+    return '';
+};
+switch ($op) {
+    case 'glpi':
+        foreach ($a as $d) {
+            if (is_file($d . '/bin/console') && is_file($d . '/src/Ticket.php')) {
+                echo $d;
+                exit(0);
+            }
+        }
+        exit(1);
+    case 'version':
+        if (preg_match('/define\(\s*[\x27\x22]GLPI_VERSION[\x27\x22]\s*,\s*[\x27\x22](\d[^\x27\x22]*)[\x27\x22]/', (string) @file_get_contents($a[0] . '/inc/define.php'), $m)) {
+            echo $m[1];
+            exit(0);
+        }
+        $v = array();
+        foreach ((array) @scandir($a[0] . '/version') as $n) {
+            if (preg_match('/^\d/', (string) $n)) {
+                $v[] = $n;
+            }
+        }
+        usort($v, 'version_compare');
+        echo (string) end($v);
+        exit(0);
+    case 'define':
+        if (preg_match('/define\(\x27' . preg_quote($a[0], '/') . '\x27,\s*\x27([^\x27]*)\x27\)/', (string) @file_get_contents($a[1]), $m)) {
+            echo $m[1];
+        }
+        exit(0);
+    case 'const':
+        echo $constant($a[0], $a[1]);
+        exit(0);
+    case 'plugin':
+        $market = $constant($a[0], 'GLPI_MARKETPLACE_DIR');
+        if ($market === '') {
+            $market = $a[0] . '/marketplace';
+        }
+        $p = $market . '/' . $a[1];
+        if (is_file($p . '/setup.php')) {
+            echo $p;
+            exit(0);
+        }
+        $p = $a[0] . '/plugins/' . $a[1];
+        if (file_exists($p) || is_link($p)) {
+            echo $p;
+            exit(0);
+        }
+        exit(1);
+    case 'exists':
+        exit(file_exists($a[0]) ? 0 : 1);
+    case 'owner':
+        foreach ($a as $p) {
+            if ($p !== '' && file_exists($p)) {
+                $o = $owner($p);
+                if ($o !== '' && $o !== 'root' && $o !== '0') {
+                    echo $o;
+                    exit(0);
+                }
+            }
+        }
+        exit(1);
+    case 'user':
+        if (preg_match('/^\d+$/', $a[0])) {
+            exit(0);
+        }
+        if (function_exists('posix_getpwnam')) {
+            exit(posix_getpwnam($a[0]) ? 0 : 1);
+        }
+        exit(preg_match('/^' . preg_quote($a[0], '/') . ':/m', (string) @file_get_contents('/etc/passwd')) ? 0 : 1);
+    case 'tools':
+        $found = array();
+        foreach ($a as $t) {
+            foreach (explode(':', (string) getenv('PATH')) as $d) {
+                if ($d !== '' && is_file($d . '/' . $t) && is_executable($d . '/' . $t)) {
+                    $found[] = $t;
+                    break;
+                }
+            }
+        }
+        echo implode(' ', $found);
+        exit(0);
+    case 'cron':
+        $files = array('/etc/crontab', '/etc/supervisor/supervisord.conf', '/etc/supervisord.conf');
+        foreach (array('/etc/cron.d', '/var/spool/cron', '/var/spool/cron/crontabs', '/etc/supervisor/conf.d', '/etc/supervisord.d') as $d) {
+            foreach ((array) @glob($d . '/*') as $f) {
+                $files[] = $f;
+            }
+        }
+        foreach ($files as $f) {
+            if (is_file($f) && preg_match('/cron\.php|glpi:cron/', (string) @file_get_contents($f))) {
+                echo $f;
+                exit(0);
+            }
+        }
+        // A scheduler that runs front/cron.php (the official image starts one with supervisord)
+        foreach ((array) @glob('/proc/[0-9]*/cmdline') as $f) {
+            $c = trim(str_replace(chr(0), ' ', (string) @file_get_contents($f)));
+            if ((int) basename(dirname($f)) !== getmypid() && preg_match('/cron\.php|glpi:cron/', $c)) {
+                echo strlen($c) > 60 ? substr($c, 0, 57) . '...' : $c;
+                exit(0);
+            }
+        }
+        exit(1);
+}
+exit(2);
+PHP
+
+with_timeout() { # with_timeout SECONDS COMMAND...
+    local seconds=$1
+    shift
+    if command -v timeout >/dev/null 2>&1; then timeout "$seconds" "$@"; else "$@"; fi
+}
+
+docker_init() { # finds a container command that answers (TICKETASSISTANT_DOCKER: another one)
+    ((${#DOCKER_CMD[@]})) && return 0
+    local engine=${TICKETASSISTANT_DOCKER:-}
+    if [[ -z $engine ]]; then
+        if command -v docker >/dev/null 2>&1; then
+            engine=docker
+        elif command -v podman >/dev/null 2>&1; then
+            engine=podman
+        else
+            return 1
+        fi
+    fi
+    local -a command=("$engine")
+    # One more argument before the commands (the tests run a script with PHP)
+    [[ -n ${TICKETASSISTANT_DOCKER_ARGS:-} ]] && command+=("$TICKETASSISTANT_DOCKER_ARGS")
+    with_timeout 15 "${command[@]}" ps -q </dev/null >/dev/null 2>&1 || return 1
+    DOCKER_CMD=("${command[@]}")
+}
+
+docker_run() { # docker_run ARGUMENT...: the container command (docker, podman)
+    docker_init || return 1
+    "${DOCKER_CMD[@]}" "$@"
+}
+
+docker_probe() { # docker_probe OPERATION ARGUMENT...: the probe, in the selected container
+    docker_run exec "$DOCKER" php -r "$PHP_PROBE" "$@" </dev/null 2>/dev/null
+}
+
+docker_root() { # a command as root in the selected container
+    docker_run exec -u 0 "$DOCKER" "$@" </dev/null
+}
+
+detect_docker_glpi() { # docker:CONTAINER:FOLDER for each running container with a GLPI
+    docker_init || return 0
+    local name dir
+    while IFS= read -r name; do
+        name=${name%$'\r'}
+        [[ -n $name ]] || continue
+        dir=$(with_timeout 20 "${DOCKER_CMD[@]}" exec "$name" php -r "$PHP_PROBE" glpi "${DOCKER_GLPI_DIRS[@]}" </dev/null 2>/dev/null) || continue
+        [[ -n $dir ]] && printf 'docker:%s:%s\n' "$name" "$dir"
+    done < <(with_timeout 15 "${DOCKER_CMD[@]}" ps --format '{{.Names}}' </dev/null 2>/dev/null)
+}
+
+candidate_split() { # candidate_split CANDIDATE → CAND_DOCKER (container or ''), CAND_DIR
+    if [[ $1 == docker:* ]]; then
+        local rest=${1#docker:}
+        CAND_DOCKER=${rest%%:*}
+        CAND_DIR=${rest#*:}
+    else
+        CAND_DOCKER=""
+        CAND_DIR=$1
+    fi
+}
+
+docker_mounts() { # DESTINATION<TAB>SOURCE of each volume and bind mount of the selected container
+    docker_run inspect -f $'{{range .Mounts}}{{.Destination}}\t{{.Source}}\n{{end}}' "$DOCKER" </dev/null 2>/dev/null | tr -d '\r'
+}
+
+docker_mount_at() { # docker_mount_at FOLDER → source of a mount on exactly this folder (status 1: none)
+    local destination source
+    while IFS=$'\t' read -r destination source; do
+        [[ -n $destination && ${destination%/} == "${1%/}" ]] && { printf '%s' "$source"; return 0; }
+    done < <(docker_mounts)
+    return 1
+}
+
+docker_on_volume() { # docker_on_volume FOLDER: status 0 when the folder survives a new container
+    local destination source
+    while IFS=$'\t' read -r destination source; do
+        destination=${destination%/}
+        [[ -n $destination && ($1 == "$destination" || $1 == "$destination"/*) ]] && return 0
+    done < <(docker_mounts)
+    return 1
+}
+
+docker_host_address() { # address of this server as seen from the selected container
+    local gateway
+    if [[ $(docker_run inspect -f '{{.HostConfig.NetworkMode}}' "$DOCKER" </dev/null 2>/dev/null | tr -d '\r') == host ]]; then
+        printf 'localhost'
+        return
+    fi
+    if docker_run info --format '{{.OperatingSystem}}' </dev/null 2>/dev/null | grep -qi 'docker desktop'; then
+        printf 'host.docker.internal'
+        return
+    fi
+    gateway=$(docker_run inspect -f '{{range .NetworkSettings.Networks}}{{println .Gateway}}{{end}}' "$DOCKER" </dev/null 2>/dev/null | tr -d '\r' | grep -m1 -E '^[0-9a-fA-F.:]+$')
+    if [[ -n $gateway ]]; then
+        printf '%s' "$gateway"
+    elif [[ ${DOCKER_CMD[0]##*/} == podman* ]]; then
+        printf 'host.containers.internal'
+    else
+        printf 'host.docker.internal'
+    fi
+}
+
+# GLPI loads a plugin from its marketplace folder first, then from plugins/
+plugin_location() { # plugin_location GLPI_FOLDER → folder of the plugin in this GLPI ('' = none)
+    local dir=$1 marketplace
+    if [[ -n $DOCKER ]]; then
+        docker_probe plugin "$dir" "$PLUGIN_KEY"
+        return 0
+    fi
+    marketplace=$(glpi_define GLPI_MARKETPLACE_DIR "$dir") || marketplace=$dir/marketplace
+    if [[ -f $marketplace/$PLUGIN_KEY/setup.php ]]; then
+        printf '%s' "$marketplace/$PLUGIN_KEY"
+    elif [[ -e $dir/plugins/$PLUGIN_KEY || -L $dir/plugins/$PLUGIN_KEY ]]; then
+        printf '%s' "$dir/plugins/$PLUGIN_KEY"
+    fi
+    return 0
+}
+
+# Folder that receives the plugin (PLUGIN_DIR): where GLPI finds it already, or
+# plugins/. In a container, a folder on a volume when there is one (the
+# marketplace folder of the official image), so that a new container keeps it
+plugin_target() {
+    PLUGIN_DIR=$(plugin_location "$GLPI")
+    [[ -n $PLUGIN_DIR ]] && return 0
+    PLUGIN_DIR=$GLPI/plugins/$PLUGIN_KEY
+    [[ -n $DOCKER ]] || return 0
+    docker_on_volume "$GLPI/plugins" && return 0
+    local marketplace
+    marketplace=$(docker_probe const "$GLPI" GLPI_MARKETPLACE_DIR)
+    [[ -n $marketplace ]] || marketplace=$GLPI/marketplace
+    # GLPI 10 serves the files of a plugin only from inside its own folder
+    if docker_on_volume "$marketplace" && { [[ $marketplace == "$GLPI"/* ]] || version_ge "${GLPI_VERSION:-0}" 11; }; then
+        PLUGIN_DIR=$marketplace/$PLUGIN_KEY
+    fi
+}
+
+plugin_version_at() { # plugin_version_at FOLDER → version of the plugin files in this folder
+    if [[ -n $DOCKER ]]; then
+        docker_probe define PLUGIN_TICKETASSISTANT_VERSION "$1/setup.php"
+    elif [[ -f $1/setup.php ]]; then
+        php_define PLUGIN_TICKETASSISTANT_VERSION "$1/setup.php"
+    fi
+    return 0
+}
 
 run_as_web() { # runs a command in the GLPI folder as the web server user
+    if [[ -n $DOCKER ]]; then
+        local -a options=(-w "$GLPI")
+        [[ -n $WEB_USER ]] && options+=(-u "$WEB_USER")
+        # Standard input only when something is written to it (the API key)
+        ((DOCKER_STDIN)) && options+=(-i)
+        docker_run exec "${options[@]}" "$DOCKER" "$@"
+        return
+    fi
     if [[ $EUID -eq 0 && -n $WEB_USER && $WEB_USER != root ]]; then
         if command -v runuser >/dev/null 2>&1; then
             (cd "$GLPI" && runuser -u "$WEB_USER" -- "$@")
@@ -933,12 +1290,16 @@ glpi_console() {
 }
 
 SECRET_INPUT=""
-glpi_console_secret() { printf '%s\n' "$SECRET_INPUT" | glpi_console "$@"; }
+glpi_console_secret() { printf '%s\n' "$SECRET_INPUT" | DOCKER_STDIN=1 glpi_console "$@"; }
 
 php_version_of() { "$1" -r 'echo PHP_VERSION;' 2>/dev/null; }
 
 glpi_version_of() {
     local dir=$1 version=""
+    if [[ -n $DOCKER ]]; then
+        docker_probe version "$dir"
+        return 0
+    fi
     [[ -f $dir/inc/define.php ]] && version=$(sed -n "s/.*define *( *['\"]GLPI_VERSION['\"] *, *['\"]\([0-9][^'\"]*\)['\"].*/\1/p" "$dir/inc/define.php" | head -n1)
     if [[ -z $version && -d $dir/version ]]; then
         version=$(ls -1 "$dir/version" 2>/dev/null | grep -E '^[0-9]' | sort -V | tail -n1)
@@ -947,12 +1308,15 @@ glpi_version_of() {
 }
 
 # Markers present in GLPI 10, 11 and 12 (front/central.php and inc/define.php are gone in 11)
-is_glpi() { [[ -f $1/bin/console && -f $1/src/Ticket.php ]]; }
-
-installed_plugin_version() { # version of the plugin files in the selected GLPI ('' = none)
-    local dest=$GLPI/plugins/$PLUGIN_KEY
-    [[ -f $dest/setup.php ]] && php_define PLUGIN_TICKETASSISTANT_VERSION "$dest/setup.php"
+is_glpi() {
+    if [[ -n $DOCKER ]]; then
+        [[ -n $(docker_probe glpi "$1") ]]
+        return
+    fi
+    [[ -f $1/bin/console && -f $1/src/Ticket.php ]]
 }
+
+installed_plugin_version() { plugin_version_at "$PLUGIN_DIR"; } # '' = none
 
 # Status of the plugin as GLPI sees it: fills STATUS[...] from status --porcelain
 declare -A STATUS=()
@@ -978,12 +1342,15 @@ step_checks() {
     fi
     ui_ok "$(t plugin_repo "$PLUGIN_VERSION" "$REPO_DIR")"
 
-    if [[ $EUID -ne 0 ]]; then
-        ui_box warn "" "$(t need_root)"
-        if ((INTERACTIVE)); then ui_confirm "$(t continue_anyway)" n || exit 1; fi
+    if ! find_php; then
+        # A GLPI in a container runs with the PHP of the container
+        if docker_init; then
+            ui_warn "$(t php_missing_docker)"
+        else
+            ui_error "$(t php_missing)"
+            exit 1
+        fi
     fi
-
-    find_php || exit 1
 
     if command -v rsync >/dev/null 2>&1; then ui_ok "$(t copy_tool rsync)"; else ui_ok "$(t copy_tool tar)"; fi
 }
@@ -1003,10 +1370,7 @@ find_php() {
         candidates+=("$bin")
         versions+=("$version")
     done
-    if ((${#candidates[@]} == 0)); then
-        ui_error "$(t php_missing)"
-        return 1
-    fi
+    ((${#candidates[@]})) || return 1
     PHP_CANDIDATES=("${candidates[@]}")
     PHP_VERSIONS=("${versions[@]}")
     PHP=${candidates[0]}
@@ -1080,41 +1444,62 @@ detect_glpi() {
 }
 
 describe_glpi() { # one line: plugin state in this GLPI
-    local dir=$1 dest=$1/plugins/$PLUGIN_KEY
-    if [[ -L $dest ]]; then
-        t plugin_link "$(readlink -f "$dest")"
-    elif [[ -f $dest/setup.php ]]; then
-        t plugin_files "$(php_define PLUGIN_TICKETASSISTANT_VERSION "$dest/setup.php")"
-    else
-        t plugin_none
+    local location version=""
+    location=$(plugin_location "$1")
+    if [[ -n $location && -z $DOCKER && -L $location ]]; then
+        t plugin_link "$(readlink -f "$location")"
+        return 0
     fi
+    [[ -n $location ]] && version=$(plugin_version_at "$location")
+    if [[ -n $version ]]; then t plugin_files "$version"; else t plugin_none; fi
+}
+
+candidate_label() { # menu line of a candidate: GLPI VERSION  WHERE<TAB>state of the plugin
+    candidate_split "$1"
+    local DOCKER=$CAND_DOCKER dir=$CAND_DIR where=$CAND_DIR
+    [[ -n $DOCKER ]] && where=$(t docker_where "$DOCKER" "$dir")
+    printf 'GLPI %s  %s\t%s' "$(glpi_version_of "$dir")" "$where" "$(describe_glpi "$dir")"
 }
 
 step_glpi() {
     ui_step 2 "$(t step_glpi)"
-    local dir
-    if [[ -n $OPT_GLPI ]]; then
+    local dir="" candidate=""
+    if [[ -n $OPT_DOCKER ]]; then
+        docker_init || { ui_error "$(t docker_unavailable)"; exit 1; }
+        DOCKER=$OPT_DOCKER
+        dir=$OPT_GLPI
+        [[ -z $dir ]] && dir=$(docker_probe glpi "${DOCKER_GLPI_DIRS[@]}")
+        [[ -n $dir ]] || { ui_error "$(t docker_no_glpi "$DOCKER")"; exit 1; }
+    elif [[ -n $OPT_GLPI ]]; then
         dir=$(readlink -f "$OPT_GLPI" 2>/dev/null || printf '%s' "$OPT_GLPI")
     else
         # The search runs under the spinner (a subshell): candidates come back through its output
         ui_run "$(t searching)" detect_glpi_print
-        mapfile -t GLPI_CANDIDATES < <(grep -E '^/' "$RUN_OUT")
+        mapfile -t GLPI_CANDIDATES < <(grep -E '^(/|docker:)' "$RUN_OUT")
+        if [[ ${GLPI_CANDIDATES[*]} == *docker:* ]]; then
+            docker_init
+        elif [[ -n ${TICKETASSISTANT_DOCKER:-} ]] || command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1; then
+            docker_init || ui_note "$(t docker_no_access)"
+        fi
         if ((${#GLPI_CANDIDATES[@]} == 0)); then
             ui_warn "$(t none_found)"
             if ((!INTERACTIVE)); then ui_error "$(t unattended_glpi 0)"; exit 1; fi
-            dir=""
         elif ((!INTERACTIVE)); then
             if ((${#GLPI_CANDIDATES[@]} > 1)); then ui_error "$(t unattended_glpi "${#GLPI_CANDIDATES[@]}")"; exit 1; fi
-            dir=${GLPI_CANDIDATES[0]}
+            candidate=${GLPI_CANDIDATES[0]}
         else
             ui_ok "$(t found_n "${#GLPI_CANDIDATES[@]}")"
             local -a items=()
-            for dir in "${GLPI_CANDIDATES[@]}"; do
-                items+=("GLPI $(glpi_version_of "$dir")  $dir"$'\t'"$(describe_glpi "$dir")")
-            done
+            for candidate in "${GLPI_CANDIDATES[@]}"; do items+=("$(candidate_label "$candidate")"); done
             items+=("$(t other_path)")
             ui_menu "$(t choose_glpi)" 0 "${items[@]}"
-            if ((REPLY_INDEX < ${#GLPI_CANDIDATES[@]})); then dir=${GLPI_CANDIDATES[REPLY_INDEX]}; else dir=""; fi
+            candidate=""
+            ((REPLY_INDEX < ${#GLPI_CANDIDATES[@]})) && candidate=${GLPI_CANDIDATES[REPLY_INDEX]}
+        fi
+        if [[ -n $candidate ]]; then
+            candidate_split "$candidate"
+            DOCKER=$CAND_DOCKER
+            dir=$CAND_DIR
         fi
     fi
     while :; do
@@ -1123,14 +1508,35 @@ step_glpi() {
             dir=$(readlink -f "$REPLY_TEXT" 2>/dev/null || printf '%s' "$REPLY_TEXT")
         fi
         if is_glpi "$dir"; then break; fi
+        if [[ -n $DOCKER ]]; then ui_error "$(t docker_not_glpi "$dir" "$DOCKER")"; exit 1; fi
         ui_error "$(t not_glpi "$dir")"
         ((INTERACTIVE)) || exit 1
         dir=""
     done
     GLPI=$dir
+    GLPI_WHERE=$GLPI
+    [[ -n $DOCKER ]] && GLPI_WHERE=$(t docker_where "$DOCKER" "$GLPI")
+    if [[ -z $DOCKER && -z $PHP ]]; then
+        ui_error "$(t php_missing)"
+        exit 1
+    fi
     GLPI_VERSION=$(glpi_version_of "$GLPI")
-    [[ -z $GLPI_VERSION ]] && GLPI_VERSION=$("$PHP" "$GLPI/bin/console" --version --no-ansi 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
-    ui_ok "$(t glpi_selected "${GLPI_VERSION:-?}" "$C_DIM$GLPI$C_RESET")"
+    if [[ -z $GLPI_VERSION ]]; then
+        if [[ -n $DOCKER ]]; then
+            GLPI_VERSION=$(docker_run exec "$DOCKER" php "$GLPI/bin/console" --version --no-ansi </dev/null 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
+        else
+            GLPI_VERSION=$("$PHP" "$GLPI/bin/console" --version --no-ansi 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
+        fi
+    fi
+    ui_ok "$(t glpi_selected "${GLPI_VERSION:-?}" "$C_DIM$GLPI_WHERE$C_RESET")"
+
+    if [[ -n $DOCKER ]]; then
+        docker_php_checks
+    elif [[ $EUID -ne 0 ]]; then
+        # Copying into the web folder and switching to the web server user need root (not a container)
+        ui_box warn "" "$(t need_root)"
+        if ((INTERACTIVE)); then ui_confirm "$(t continue_anyway)" n || exit 1; fi
+    fi
 
     if [[ -n $GLPI_VERSION ]]; then
         if ! version_ge "$GLPI_VERSION" "$MIN_GLPI"; then
@@ -1138,29 +1544,57 @@ step_glpi() {
             exit 1
         fi
         version_ge "$GLPI_VERSION" "$MAX_GLPI" && ui_warn "$(t glpi_untested "$GLPI_VERSION" "${MAX_GLPI%.99}")"
-        choose_php_for_glpi
+        [[ -z $DOCKER ]] && choose_php_for_glpi
     fi
 
     detect_web_user
     # The console refuses root on recent GLPI versions unless told otherwise
-    if [[ $EUID -eq 0 && (-z $WEB_USER || $WEB_USER == root) ]] && "$PHP" "$GLPI/bin/console" --help 2>&1 | grep -q -- '--allow-superuser'; then
+    if [[ -n $DOCKER ]]; then
+        if [[ -z $WEB_USER || $WEB_USER == root || $WEB_USER == 0 ]] && docker_run exec "$DOCKER" php "$GLPI/bin/console" --help </dev/null 2>&1 | grep -q -- '--allow-superuser'; then
+            CONSOLE_EXTRA=(--allow-superuser)
+        fi
+    elif [[ $EUID -eq 0 && (-z $WEB_USER || $WEB_USER == root) ]] && "$PHP" "$GLPI/bin/console" --help 2>&1 | grep -q -- '--allow-superuser'; then
         CONSOLE_EXTRA=(--allow-superuser)
+    fi
+    plugin_target
+}
+
+docker_php_checks() { # PHP and extensions of the selected container
+    PHP=php
+    PHP_VERSION=$(docker_run exec "$DOCKER" php -r 'echo PHP_VERSION;' </dev/null 2>/dev/null)
+    ui_ok "$(t docker_php "${PHP_VERSION:-?}")"
+    local -a modules=() missing=()
+    local ext
+    mapfile -t modules < <(docker_run exec "$DOCKER" php -m </dev/null 2>/dev/null | tr -d '\r' | tr '[:upper:]' '[:lower:]')
+    for ext in curl mbstring json gd zip zlib; do
+        printf '%s\n' "${modules[@]}" | grep -qx "$ext" || missing+=("$ext")
+    done
+    if ((${#missing[@]})); then
+        ui_warn "$(t ext_missing "${missing[*]}")"
+        ui_note "$(t docker_ext_hint)"
+    else
+        ui_ok "$(t ext_ok "curl mbstring json gd zip zlib")"
     fi
 }
 
 detect_glpi_print() {
     detect_glpi 2>/dev/null
     ((${#GLPI_CANDIDATES[@]})) && printf '%s\n' "${GLPI_CANDIDATES[@]}"
+    detect_docker_glpi 2>/dev/null
     return 0
 }
 
 detect_web_user() {
     local candidate="" dir var_dir
+    if [[ -n $DOCKER ]]; then
+        detect_web_user_docker
+        return
+    fi
     if [[ -n $OPT_WEB_USER ]]; then
         WEB_USER=$OPT_WEB_USER
     else
         # GLPI_VAR_DIR can be moved by the packaging (e.g. /var/lib/glpi)
-        var_dir=$(sed -n "s/.*define *( *['\"]GLPI_VAR_DIR['\"] *, *['\"]\([^'\"]*\)['\"].*/\1/p" "$GLPI/inc/downstream.php" "$GLPI/config/local_define.php" 2>/dev/null | head -n1)
+        var_dir=$(glpi_define GLPI_VAR_DIR "$GLPI")
         for dir in "$var_dir" "$GLPI/files" "$GLPI/config" "$GLPI/marketplace" "$GLPI/plugins"; do
             [[ -n $dir && -e $dir ]] || continue
             candidate=$(stat -c %U "$dir" 2>/dev/null)
@@ -1187,55 +1621,145 @@ detect_web_user() {
     [[ -n $WEB_USER ]] && ui_ok "$(t web_user "$WEB_USER")"
 }
 
+detect_web_user_docker() { # owner of the GLPI files in the container (www-data in the official image)
+    local candidate=$OPT_WEB_USER
+    if [[ -z $candidate ]]; then
+        candidate=$(docker_probe owner "$(docker_probe const "$GLPI" GLPI_VAR_DIR)" "$GLPI/files" "$GLPI/config" "$GLPI/marketplace" "$GLPI/plugins" "$GLPI")
+        if ((INTERACTIVE)); then
+            ui_input "$(t web_user_ask)" "${candidate:-www-data}"
+            candidate=$REPLY_TEXT
+        fi
+    fi
+    if [[ -n $candidate ]] && ! docker_probe user "$candidate"; then
+        ui_warn "$candidate?"
+        candidate=""
+    fi
+    WEB_USER=$candidate
+    [[ -n $WEB_USER ]] && ui_ok "$(t web_user "$WEB_USER")"
+}
+
 # -----------------------------------------------------------------------------
 # Step 3: plugin files and installation in GLPI
 # -----------------------------------------------------------------------------
 INSTALL_MODE=copy BACKUP_FILE="" GLPI_LOGIN=${OPT_LOGIN:-glpi}
 
+backup_dir() { # folder of the backups, on this server
+    local base=${TICKETASSISTANT_BACKUP_DIR:-/var/backups/glpi-ticketassistant}
+    { mkdir -p "$base" 2>/dev/null && [[ -w $base ]]; } || base="$HOME/.glpi-ticketassistant-backups"
+    mkdir -p "$base" || return 1
+    printf '%s' "$base"
+}
+
 # Saves the plugin folder before it is replaced: sets BACKUP_FILE ('' when
 # there is nothing to save; a link to the repository is simply removed)
 backup_plugin() {
-    local dest=$GLPI/plugins/$PLUGIN_KEY previous base
+    local dest=$PLUGIN_DIR previous base
     BACKUP_FILE=""
-    if [[ -L $dest ]]; then
+    if [[ -n $DOCKER ]]; then
+        docker_probe exists "$dest" || return 0
+    elif [[ -L $dest ]]; then
         rm -f "$dest"
         return
+    else
+        [[ -d $dest ]] || return 0
     fi
-    [[ -d $dest ]] || return 0
-    previous=$(php_define PLUGIN_TICKETASSISTANT_VERSION "$dest/setup.php")
-    base=/var/backups/glpi-ticketassistant
-    { mkdir -p "$base" 2>/dev/null && [[ -w $base ]]; } || base="$HOME/.glpi-ticketassistant-backups"
-    mkdir -p "$base" || return 1
+    previous=$(plugin_version_at "$dest")
+    base=$(backup_dir) || return 1
     BACKUP_FILE="$base/$PLUGIN_KEY-${previous:-unknown}-$(date +%Y%m%d-%H%M%S).tar.gz"
-    ui_run "$(t backing_up)" tar -C "$GLPI/plugins" -czf "$BACKUP_FILE" "$PLUGIN_KEY" || return 1
+    if [[ -n $DOCKER ]]; then
+        ui_run "$(t backing_up)" docker_archive "$dest" "$BACKUP_FILE" || return 1
+    else
+        ui_run "$(t backing_up)" tar -C "${dest%/*}" -czf "$BACKUP_FILE" "$PLUGIN_KEY" || return 1
+    fi
     ui_note "$(t backup_done "$BACKUP_FILE")"
 }
 
-copy_plugin() {
-    local dest=$GLPI/plugins/$PLUGIN_KEY pattern
-    mkdir -p "$GLPI/plugins" || return 1
+docker_archive() { # docker_archive FOLDER ARCHIVE: a folder of the container saved in a .tar.gz here
+    local work status=0
+    work=$(mktemp -d "${TMPDIR:-/tmp}/ticketassistant-backup.XXXXXX") || return 1
+    { docker_run cp "$DOCKER:$1" "$work/$PLUGIN_KEY" </dev/null && tar -C "$work" -czf "$2" "$PLUGIN_KEY"; } || status=1
+    rm -rf "${work:?}"
+    return "$status"
+}
+
+stage_plugin() { # stage_plugin FOLDER: the files of the plugin, without the files of the repository
+    local pattern
+    local -a excludes=()
     if command -v rsync >/dev/null 2>&1; then
-        local -a excludes=()
         for pattern in "${COPY_EXCLUDES[@]}"; do excludes+=("--exclude=/$pattern"); done
-        rsync -a --delete "${excludes[@]}" --exclude='*.log' "$REPO_DIR/" "$dest/" || return 1
+        rsync -a --delete "${excludes[@]}" --exclude='*.log' "$REPO_DIR/" "$1/"
     else
-        local -a excludes=()
         for pattern in "${COPY_EXCLUDES[@]}"; do excludes+=("--exclude=./$pattern"); done
-        rm -rf "$dest.new" && mkdir -p "$dest.new" || return 1
-        tar -C "$REPO_DIR" "${excludes[@]}" --exclude='*.log' -cf - . | tar -C "$dest.new" -xf - || return 1
-        rm -rf "$dest" && mv "$dest.new" "$dest" || return 1
+        mkdir -p "$1" && tar -C "$REPO_DIR" "${excludes[@]}" --exclude='*.log' -cf - . | tar -C "$1" -xf -
     fi
 }
 
+copy_plugin() {
+    local dest=$PLUGIN_DIR
+    mkdir -p "${dest%/*}" || return 1
+    # rsync updates the folder in place; otherwise a new folder replaces the old one
+    if command -v rsync >/dev/null 2>&1; then
+        stage_plugin "$dest"
+    else
+        rm -rf "$dest.new" && stage_plugin "$dest.new" && rm -rf "$dest" && mv "$dest.new" "$dest"
+    fi
+}
+
+# The new files go next to the old ones (GLPI ignores a folder named
+# ticketassistant.new), then replace them in one move
+copy_plugin_docker() {
+    local dest=$PLUGIN_DIR stage status=0
+    stage=$(mktemp -d "${TMPDIR:-/tmp}/ticketassistant-stage.XXXXXX") || return 1
+    {
+        stage_plugin "$stage/$PLUGIN_KEY" &&
+            docker_root mkdir -p "${dest%/*}" &&
+            docker_root rm -rf "$dest.new" &&
+            docker_run cp "$stage/$PLUGIN_KEY" "$DOCKER:$dest.new" </dev/null &&
+            docker_root rm -rf "$dest" &&
+            docker_root mv "$dest.new" "$dest"
+    } || status=1
+    rm -rf "${stage:?}"
+    return "$status"
+}
+
 fix_permissions() {
-    local dest=$GLPI/plugins/$PLUGIN_KEY
+    local dest=$PLUGIN_DIR
+    if [[ -n $DOCKER ]]; then
+        docker_root chmod -R a-x,u=rwX,go=rX "$dest" || return 1
+        [[ -z $WEB_USER ]] || docker_root chown -R "$WEB_USER" "$dest"
+        return
+    fi
     find "$dest" -type d -exec chmod 755 {} + && find "$dest" -type f -exec chmod 644 {} + || return 1
     chmod 755 "$dest" 2>/dev/null
     if [[ $EUID -eq 0 && -n $WEB_USER ]]; then chown -R "$WEB_USER": "$dest" || return 1; fi
 }
 
+place_plugin_docker() {
+    local dest=$PLUGIN_DIR source
+    INSTALL_MODE=copy
+    [[ $OPT_MODE == link ]] && ui_info "$(t docker_no_link)"
+    # A folder mounted from this server (a development checkout, for example) is used as it is
+    if source=$(docker_mount_at "$dest"); then
+        INSTALL_MODE=mounted
+        ui_ok "$(t docker_mounted "$dest" "$source")"
+        return 0
+    fi
+    if docker_on_volume "${dest%/*}"; then
+        ui_ok "$(t docker_volume "${dest%/*}")"
+    else
+        ui_box warn "" "$(t docker_no_volume "${dest%/*}")"
+    fi
+    backup_plugin || return 1
+    ui_run "$(t copying "$(t docker_where "$DOCKER" "$dest")")" copy_plugin_docker || { ui_output_box "$(t copying "$dest")"; return 1; }
+    ui_run "$(t perms "${WEB_USER:-root}")" fix_permissions || true
+}
+
 place_plugin() {
-    local dest=$GLPI/plugins/$PLUGIN_KEY
+    if [[ -n $DOCKER ]]; then
+        place_plugin_docker
+        return
+    fi
+    local dest=$PLUGIN_DIR
     # Archive extracted directly in plugins/ and installer run from there
     if [[ -d $dest && ! -L $dest && $(readlink -f "$dest") == "$REPO_DIR" ]]; then
         INSTALL_MODE=copy
@@ -1264,6 +1788,8 @@ place_plugin() {
     fi
 
     if [[ $INSTALL_MODE == link ]]; then
+        if [[ -d $dest && ! -L $dest ]]; then rm -rf "${dest:?}" || return 1; fi
+        mkdir -p "${dest%/*}" || return 1
         ui_run "$(t linking "$dest")" ln -sfn "$REPO_DIR" "$dest" || return 1
     else
         ui_run "$(t copying "$dest")" copy_plugin || { ui_output_box "$(t copying "$dest")"; return 1; }
@@ -1366,6 +1892,14 @@ configure_ai() {
             ollama | compatible)
                 local current=${PROVIDER_URL[$new_provider]}
                 [[ $provider == "$new_provider" && -n ${STATUS[base_url]:-} ]] && current=${STATUS[base_url]}
+                if [[ -n $DOCKER && $current =~ ^(https?://)(localhost|127\.0\.0\.1)([:/].*)?$ ]]; then
+                    local scheme=${BASH_REMATCH[1]} rest=${BASH_REMATCH[3]} host
+                    host=$(docker_host_address)
+                    if [[ $host != localhost ]]; then
+                        current=$scheme$host$rest
+                        ui_note "$(t docker_url_hint "$host")"
+                    fi
+                fi
                 ui_input "$(t base_url_ask)" "$current"
                 args+=(--base-url="$REPLY_TEXT")
                 ;;
@@ -1487,6 +2021,11 @@ personalize() {
 
 configure_unattended() {
     local -a args=()
+    if [[ -n $DOCKER && $OPT_BASE_URL =~ ^https?://(localhost|127\.0\.0\.1)([:/]|$) ]]; then
+        local host
+        host=$(docker_host_address)
+        [[ $host != localhost ]] && ui_warn "$(t docker_url_hint "$host")"
+    fi
     [[ -n $OPT_PROVIDER ]] && args+=(--provider="$OPT_PROVIDER")
     [[ -n $OPT_BASE_URL ]] && args+=(--base-url="$OPT_BASE_URL")
     [[ -n $OPT_API_VERSION ]] && args+=(--api-version="$OPT_API_VERSION")
@@ -1555,6 +2094,10 @@ cron_exists() {
 }
 
 check_cron() {
+    if [[ -n $DOCKER ]]; then
+        check_cron_docker
+        return
+    fi
     if cron_exists; then
         ui_ok "$(t cron_found)"
         CRON_SUMMARY=$(t found)
@@ -1581,7 +2124,58 @@ check_cron() {
     CRON_SUMMARY=$(t missing)
 }
 
+# The cron of GLPI in a container: in the container (the official image runs one),
+# or a line of this server that runs it with "docker exec"
+check_cron_docker() {
+    local found
+    if found=$(docker_probe cron) && [[ -n $found ]]; then
+        ui_ok "$(t docker_cron_found "$found")"
+        CRON_SUMMARY=$(t found)
+        return 0
+    fi
+    if { grep -rhs 'cron\.php' /etc/crontab /etc/cron.d 2>/dev/null; crontab -l 2>/dev/null; } | grep -F -- " $DOCKER " | grep -q 'cron\.php'; then
+        ui_ok "$(t cron_found)"
+        CRON_SUMMARY=$(t found)
+        return 0
+    fi
+    local engine line file
+    engine=$(command -v "${DOCKER_CMD[0]}" 2>/dev/null || printf '%s' "${DOCKER_CMD[0]}")
+    line="$engine${DOCKER_CMD[1]:+ ${DOCKER_CMD[*]:1}} exec${WEB_USER:+ -u $WEB_USER} $DOCKER php $GLPI/front/cron.php"
+    # run-parts accepts only letters, digits, - and _ in the names of /etc/cron.d
+    file=/etc/cron.d/glpi-cron-${DOCKER//[^A-Za-z0-9_-]/-}
+    ui_box warn "" "$(t docker_cron_missing)"
+    local create=0
+    if [[ $OPT_CRON == yes ]]; then
+        create=1
+    elif [[ $OPT_CRON != no ]] && ((INTERACTIVE)) && [[ $EUID -eq 0 && -d /etc/cron.d ]]; then
+        ui_confirm "$(t docker_cron_create "$file")" y && create=1
+    fi
+    if ((create)) && [[ $EUID -eq 0 && -d /etc/cron.d && ! -e $file ]]; then
+        if printf '# GLPI automatic actions of the container %s (created by the GLPI AI Ticket Assistant installer)\n* * * * * root %s >/dev/null 2>&1\n' "$DOCKER" "$line" >"$file" && chmod 644 "$file"; then
+            ui_ok "$(t cron_created "$file")"
+            CRON_SUMMARY=$(t created)
+            return 0
+        fi
+    fi
+    ui_info "$(t docker_cron_manual "$(id -un)")"
+    ui_note "* * * * * $line"
+    CRON_SUMMARY=$(t missing)
+}
+
 check_poppler() {
+    if [[ -n $DOCKER ]]; then
+        # Installed in a running container, a package is lost when the container is recreated
+        local tools
+        tools=$(docker_probe tools pdftotext pdftoppm)
+        if [[ $tools == *pdftotext* && $tools == *pdftoppm* ]]; then
+            ui_ok "$(t poppler_ok)"
+            PDF_SUMMARY="poppler-utils"
+        else
+            PDF_SUMMARY=$(t builtin_reader)
+            ui_info "$(t docker_poppler_missing)"
+        fi
+        return 0
+    fi
     if command -v pdftotext >/dev/null 2>&1 && command -v pdftoppm >/dev/null 2>&1; then
         ui_ok "$(t poppler_ok)"
         PDF_SUMMARY="poppler-utils"
@@ -1632,8 +2226,10 @@ summary() {
     [[ $TEST_RESULT == ok ]] && test_mark="ok"
     [[ $TEST_RESULT == failed ]] && test_mark="error"
     ui_title "$SYM_STAR $(t summary_title)"
-    ui_kv "$(t s_glpi)" "${GLPI_VERSION:-?}  $C_DIM$GLPI$C_RESET" ok
-    ui_kv "$(t s_plugin)" "${STATUS[version]:-$PLUGIN_VERSION}  $C_DIM$([[ $INSTALL_MODE == link ]] && t mode_link_short || t mode_copy_short)$C_RESET" ok
+    local mode
+    case $INSTALL_MODE in link) mode=$(t mode_link_short) ;; mounted) mode=$(t mode_mount_short) ;; *) mode=$(t mode_copy_short) ;; esac
+    ui_kv "$(t s_glpi)" "${GLPI_VERSION:-?}  $C_DIM${GLPI_WHERE:-$GLPI}$C_RESET" ok
+    ui_kv "$(t s_plugin)" "${STATUS[version]:-$PLUGIN_VERSION}  $C_DIM$mode$C_RESET" ok
     ui_kv "$(t s_ai)" "${AI_SUMMARY:-$(t ai_not_configured)}$([[ -n $TEST_RESULT ]] && printf '  %s(%s)%s' "$C_DIM" "$([[ $TEST_RESULT == ok ]] && t test_ok || t test_failed)" "$C_RESET")" "${test_mark:-warn}"
     [[ -n $LIBRARY_SUMMARY ]] && ui_kv "$(t s_library)" "$LIBRARY_SUMMARY" ok
     [[ -n $CRON_SUMMARY ]] && ui_kv "$(t s_cron)" "$CRON_SUMMARY" "$([[ $CRON_SUMMARY == "$(t missing)" ]] && echo warn || echo ok)"
@@ -1682,10 +2278,18 @@ uninstall_flow() {
     fi
     ui_run "$(t deactivating)" glpi_console plugin:deactivate "$PLUGIN_KEY" || true
     ui_run "$(t uninstalling)" glpi_console plugin:uninstall "$PLUGIN_KEY" || { ui_output_box "$(t console_error)"; return 1; }
-    local dest=$GLPI/plugins/$PLUGIN_KEY
-    if [[ -e $dest || -L $dest ]] && { ((!INTERACTIVE)) || ui_confirm "$(t remove_folder "$dest")" y; }; then
+    local dest=$PLUGIN_DIR source
+    if [[ -n $DOCKER ]]; then
+        if source=$(docker_mount_at "$dest"); then
+            ui_info "$(t docker_mounted_kept "$dest" "$source")"
+        elif docker_probe exists "$dest" && { ((!INTERACTIVE)) || ui_confirm "$(t remove_folder "$dest")" y; }; then
+            if backup_plugin && docker_root rm -rf "$dest"; then
+                [[ -n $BACKUP_FILE ]] && ui_ok "$(t removed "$BACKUP_FILE")"
+            fi
+        fi
+    elif [[ -e $dest || -L $dest ]] && { ((!INTERACTIVE)) || ui_confirm "$(t remove_folder "$dest")" y; }; then
         if backup_plugin; then
-            rm -rf "$dest"
+            rm -rf "${dest:?}"
             [[ -n $BACKUP_FILE ]] && ui_ok "$(t removed "$BACKUP_FILE")"
         fi
     fi

@@ -54,6 +54,83 @@ try {
     Check 'in place: no copy onto itself' 1 @($output | Where-Object { $_ -match 'arquivos do plugin' }).Count
     Check 'in place: console messages in Portuguese' $true (@((Get-FakeState).calls | Where-Object { $_ -match 'lang=pt_BR' }).Count -gt 0)
 
+    # --- GLPI in a container: a fake docker (fake-docker\docker.php) plays a container
+    # "glpi-app" whose files are in $TestContainer, and a "db" container without PHP
+    $TestContainer = Join-Path $TestWork 'container'
+    $TestDockerLog = Join-Path $TestWork 'docker.log'
+    $TestBackups = Join-Path $TestWork 'backups'
+    function New-FakeContainer {
+        if (Test-Path -LiteralPath $TestContainer) { Remove-Item -LiteralPath $TestContainer -Recurse -Force }
+        New-Item -ItemType Directory -Path (Join-Path $TestContainer 'etc'), (Join-Path $TestContainer 'var\www'), (Join-Path $TestContainer 'var\glpi\marketplace') -Force | Out-Null
+        [IO.File]::WriteAllText((Join-Path $TestContainer 'etc\passwd'), "root:x:0:0:root:/root:/bin/bash`nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin`n")
+        Copy-Item -LiteralPath (Join-Path $TestHere 'fake-glpi') -Destination (Join-Path $TestContainer 'var\www\glpi') -Recurse
+        New-Item -ItemType Directory -Path (Join-Path $TestContainer 'var\www\glpi\files'), (Join-Path $TestContainer 'var\www\glpi\plugins') -Force | Out-Null
+        [IO.File]::WriteAllText($TestDockerLog, '')
+    }
+    function Get-ContainerState { return (Get-Content -LiteralPath (Join-Path $TestContainer 'var\www\glpi\files\state.json') -Raw -Encoding UTF8 | ConvertFrom-Json) }
+    function Get-DockerLog { return @(Get-Content -LiteralPath $TestDockerLog -Encoding UTF8) }
+    function Get-Backups { return @(Get-ChildItem -LiteralPath $TestBackups -Filter 'ticketassistant-*.zip' -ErrorAction SilentlyContinue) }
+    $env:TICKETASSISTANT_DOCKER = $TestPhp
+    $env:TICKETASSISTANT_DOCKER_ARGS = Join-Path $TestHere 'fake-docker\docker.php'
+    $env:FAKE_DOCKER_ROOT = $TestContainer
+    $env:FAKE_DOCKER_LOG = $TestDockerLog
+    $env:TICKETASSISTANT_BACKUP_DIR = $TestBackups
+    try {
+        New-FakeContainer
+        $env:TEST_KEY = 'sk-test-456'
+        $output = & $TestShell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $TestRoot 'install.ps1') -Yes -Lang en -Docker glpi-app -WebUser www-data `
+            -Provider openai -Model gpt-5-mini -ApiKeyEnv TEST_KEY -Sync yes -Cron no 2>&1 | ForEach-Object { "$_" }
+        Check 'container: exit code' 0 $LASTEXITCODE
+        $plugin = Join-Path $TestContainer 'var\www\glpi\plugins\ticketassistant'
+        Check 'container: plugin copied into plugins/' $true (Test-Path -LiteralPath (Join-Path $plugin 'setup.php'))
+        Check 'container: no temporary folder left' $false (Test-Path -LiteralPath "$plugin.new")
+        Check 'container: repository files left out' $false (Test-Path -LiteralPath (Join-Path $plugin 'tests'))
+        $state = Get-ContainerState
+        Check 'container: key received intact (no byte order mark)' 'sk-test-456' $state.key
+        Check 'container: key never on a command line' 0 @(Get-DockerLog | Where-Object { $_ -match 'sk-test-456' }).Count
+        Check 'container: console run as the web server user' $true (@(Get-DockerLog | Where-Object { $_ -match '"exec","-w","/var/www/glpi","-u","www-data"' }).Count -gt 0)
+        Check 'container: enabled' 1 $state.config.enabled
+        Check 'container: library synchronized' $true $state.synced
+        Check 'container: warning, plugins/ not on a volume' $true (@($output | Where-Object { $_ -match 'recreating' }).Count -gt 0)
+        Check 'container: cron command shown' 1 @($output | Where-Object { $_ -match 'exec -u www-data glpi-app php /var/www/glpi/front/cron\.php' }).Count
+        Check 'container: summary' 1 @($output | Where-Object { $_ -match '\(connection OK\)' }).Count
+
+        # Official image: the marketplace folder is on the volume /var/glpi
+        New-FakeContainer
+        $env:FAKE_DOCKER_MOUNTS = '/var/glpi=/var/lib/docker/volumes/glpi_data/_data'
+        $env:FAKE_DOCKER_ENV = 'GLPI_MARKETPLACE_DIR=/var/glpi/marketplace'
+        $output = & $TestShell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $TestRoot 'install.ps1') -Yes -Lang en -Docker glpi-app -WebUser www-data `
+            -SkipAi -Sync no -Cron no 2>&1 | ForEach-Object { "$_" }
+        Check 'volume: exit code' 0 $LASTEXITCODE
+        $plugin = Join-Path $TestContainer 'var\glpi\marketplace\ticketassistant'
+        Check 'volume: plugin in the marketplace folder' $true (Test-Path -LiteralPath (Join-Path $plugin 'setup.php'))
+        Check 'volume: nothing in plugins/' $false (Test-Path -LiteralPath (Join-Path $TestContainer 'var\www\glpi\plugins\ticketassistant'))
+        Check 'volume: GLPI finds it' 'marketplace' (Get-ContainerState).folder
+
+        $output = & $TestShell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $TestRoot 'install.ps1') -Yes -Lang en -Docker glpi-app -WebUser www-data `
+            -SkipAi -Sync no -Cron no 2>&1 | ForEach-Object { "$_" }
+        Check 'update: exit code' 0 $LASTEXITCODE
+        Check 'update: previous version saved' 1 (Get-Backups).Count
+        $entries = @()
+        if ((Get-Backups).Count) {
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            $zip = [IO.Compression.ZipFile]::OpenRead((Get-Backups)[0].FullName)
+            try { $entries = @($zip.Entries | ForEach-Object { $_.FullName }) } finally { $zip.Dispose() }
+        }
+        Check 'update: the backup holds the plugin' $true ($entries -contains 'setup.php')
+
+        $output = & $TestShell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $TestRoot 'install.ps1') -Yes -Lang en -Docker glpi-app -WebUser www-data `
+            -Uninstall 2>&1 | ForEach-Object { "$_" }
+        Check 'uninstall: exit code' 0 $LASTEXITCODE
+        Check 'uninstall: uninstalled in GLPI' $false (Get-ContainerState).installed
+        Check 'uninstall: folder removed' $false (Test-Path -LiteralPath $plugin)
+        Check 'uninstall: folder saved first' 2 (Get-Backups).Count
+    } finally {
+        foreach ($name in @('TICKETASSISTANT_DOCKER', 'TICKETASSISTANT_DOCKER_ARGS', 'FAKE_DOCKER_ROOT', 'FAKE_DOCKER_LOG', 'FAKE_DOCKER_MOUNTS', 'FAKE_DOCKER_ENV', 'TICKETASSISTANT_BACKUP_DIR')) {
+            Remove-Item -LiteralPath "Env:$name" -ErrorAction SilentlyContinue
+        }
+    }
+
     # --- Terminal widgets driven by scripted keys --------------------------------
     . (Join-Path $TestRoot 'install.ps1') -Lang en
     Initialize-Ui

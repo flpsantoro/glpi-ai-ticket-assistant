@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Fake docker of the installer tests (the work is done by docker.php, with the
+# PHP of FAKE_DOCKER_PHP). In Git Bash (Windows), the paths of this computer
+# are converted for PHP and the paths of the container are left alone.
+
+here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+php=${FAKE_DOCKER_PHP:-php}
+if command -v cygpath >/dev/null 2>&1; then
+    export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'
+    here=$(cygpath -m "$here")
+    [[ -n ${FAKE_DOCKER_ROOT:-} ]] && export FAKE_DOCKER_ROOT="$(cygpath -m "$FAKE_DOCKER_ROOT")"
+    [[ -n ${FAKE_DOCKER_LOG:-} ]] && export FAKE_DOCKER_LOG="$(cygpath -m "$FAKE_DOCKER_LOG")"
+    if [[ ${1:-} == cp ]]; then
+        args=(cp)
+        for arg in "${@:2}"; do
+            if [[ $arg == -* || $arg == *:/* ]]; then args+=("$arg"); else args+=("$(cygpath -m "$arg")"); fi
+        done
+        set -- "${args[@]}"
+    fi
+fi
+exec "$php" "$here/docker.php" "$@"

@@ -5,6 +5,16 @@ every release updates `PLUGIN_TICKETASSISTANT_VERSION` in `setup.php`.
 
 ## [Unreleased]
 
+### Added
+- The installers find a GLPI running in a container (Docker, Podman, Docker Desktop) and install
+  the plugin in it: read-only detection with the PHP of the container, console with `docker exec`
+  as the owner of the GLPI files (API key on the standard input), copy with `docker cp` into a
+  folder kept by a volume (the marketplace folder of the official `glpi/glpi` image), plugin folder
+  mounted from the host left untouched, address of a local AI server seen from the container, cron
+  of the container or of the host, backups on the host. Options `--docker` / `-Docker` and
+  `-WebUser`.
+- The installers update the plugin where GLPI loads it, its marketplace folder included.
+
 ### Changed
 - Coding style of the GLPI plugins baseline (PER Coding Style 3.0 with PHP-CS-Fixer), checked by
   the CI.

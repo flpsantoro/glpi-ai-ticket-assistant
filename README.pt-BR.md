@@ -90,10 +90,11 @@ chamados que parecem mal classificados. Detalhes em
 
 ### Com o instalador (recomendado)
 
-O instalador encontra as instalações do GLPI da máquina, escolhe um PHP compatível e o usuário do
-servidor web, copia o plugin, instala e habilita, conecta o provedor de IA (menu de provedores, lista
-dos modelos, teste de conexão), monta a biblioteca de chamados resolvidos e verifica o cron e as
-ferramentas de PDF. Setas e Enter, em português ou inglês; pergunta antes de mudar qualquer coisa.
+O instalador encontra as instalações do GLPI da máquina e dos seus contêineres (Docker, Podman),
+escolhe um PHP compatível e o usuário do servidor web, copia o plugin, instala e habilita, conecta
+o provedor de IA (menu de provedores, lista dos modelos, teste de conexão), monta a biblioteca de
+chamados resolvidos e verifica o cron e as ferramentas de PDF. Setas e Enter, em português ou
+inglês; pergunta antes de mudar qualquer coisa.
 
 **Linux**
 
@@ -110,6 +111,11 @@ git clone https://github.com/flpsantoro/glpi-ai-ticket-assistant.git
 cd glpi-ai-ticket-assistant
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
+
+**GLPI em um contêiner** (a imagem oficial `glpi/glpi` ou qualquer outra): os mesmos instaladores
+encontram os contêineres em execução e instalam o plugin com `docker exec` e `docker cp`, num volume
+quando existe um, sem PHP no host: `bash install.sh --docker glpi` ou `.\install.ps1 -Docker glpi`
+([detalhes](docs/pt-BR/INSTALACAO.md#glpi-em-um-contêiner)).
 
 Rode de novo depois para atualizar o plugin, trocar o provedor de IA, testar a conexão ou
 desinstalar. Modo não interativo para automação: `sudo bash install.sh --help` ou

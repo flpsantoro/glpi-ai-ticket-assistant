@@ -8,7 +8,8 @@
         powershell -ExecutionPolicy Bypass -File .\install.ps1
 
     Finds the GLPI installations of the machine (XAMPP, WAMP, Laragon, IIS,
-    Apache…), copies (or links) the plugin, installs and enables it with the
+    Apache…) and of its containers (Docker Desktop, Podman), copies (or links)
+    the plugin, installs and enables it with the
     GLPI console, connects the AI provider, builds the library of solved
     tickets and checks the scheduled task of the GLPI cron and the PDF tools.
     Nothing is changed without asking (or -Yes).
@@ -24,11 +25,17 @@
     $env:OPENAI_API_KEY = 'sk-...'
     .\install.ps1 -Yes -GlpiPath C:\xampp\htdocs\glpi -Provider openai -Model gpt-5-mini -ApiKeyEnv OPENAI_API_KEY -Cron yes
     Unattended installation.
+
+.EXAMPLE
+    .\install.ps1 -Yes -Docker glpi -Provider ollama -BaseUrl http://host.docker.internal:11434/v1 -Model gemma3
+    Unattended installation in the container "glpi" (Docker Desktop).
 #>
 [CmdletBinding()]
 param(
     [string]$GlpiPath = '',
+    [string]$Docker = '',
     [string]$Php = '',
+    [string]$WebUser = '',
     [ValidateSet('', 'Copy', 'Link')][string]$Mode = '',
     [string]$GlpiUser = '',
     [ValidateSet('', 'openai', 'azure', 'anthropic', 'gemini', 'mistral', 'openrouter', 'ollama', 'compatible')][string]$Provider = '',
@@ -69,7 +76,7 @@ $LogFile = Join-Path ([IO.Path]::GetTempPath()) ('ticketassistant-install-' + (G
 # Folders and files of the repository that are not part of the plugin
 $ExcludeDirs = @('.git', '.github', 'docs', 'tests', 'tools', 'vendor', 'node_modules', '.phpunit.cache')
 $ExcludeFiles = @('install.sh', 'install.ps1', 'composer.json', 'composer.lock', 'phpunit.xml.dist', '.phpunit.result.cache',
-    '.gitattributes', '.gitignore', '.editorconfig', 'CONTRIBUTING.md', '*.log')
+    '.gitattributes', '.gitignore', '.editorconfig', '.php-cs-fixer.dist.php', '.php-cs-fixer.cache', 'CONTRIBUTING.md', '*.log')
 
 $Providers = @('openai', 'azure', 'anthropic', 'gemini', 'mistral', 'openrouter', 'ollama', 'compatible')
 $ProviderUrl = @{
@@ -239,7 +246,30 @@ $MsgEn = @{
     uninstalled      = 'The plugin was uninstalled.'
     cancelled        = 'Cancelled.'
     log_at           = 'Full log: {0}'
-    unattended_glpi  = 'Unattended mode: use -GlpiPath (found: {0}).'
+    unattended_glpi  = 'Unattended mode: use -GlpiPath or -Docker (found: {0}).'
+    php_missing_docker = 'PHP not found on this computer: only a GLPI in a container can receive the plugin.'
+    docker_where     = 'container {0} → {1}'
+    docker_unavailable = 'Docker (or Podman) does not answer: is Docker Desktop installed and running?'
+    docker_no_access = 'Docker (or Podman) is installed but does not answer: start Docker Desktop to search the containers too.'
+    docker_no_glpi   = 'No GLPI found in the container {0} (is it running?): use -GlpiPath, the folder of GLPI inside the container.'
+    docker_not_glpi  = '{0} is not a GLPI folder in the container {1}.'
+    docker_php       = 'PHP {0} in the container'
+    docker_ext_hint  = 'Add them to the image of the container.'
+    web_user         = 'Web server user: {0}'
+    web_user_ask     = 'Which user runs the web server in the container (owner of the GLPI files)?'
+    perms            = 'Owner {0} and permissions'
+    docker_no_link   = 'A container cannot be linked to this repository: the files are copied.'
+    docker_mounted   = 'The folder {0} of the container is mounted from {1}: it is used as it is (update the files there).'
+    docker_mounted_kept = 'The folder {0} of the container is mounted from {1}: its files are left in place.'
+    docker_volume    = 'Plugin folder on a volume of the container: {0}'
+    docker_no_volume = 'The folder {0} of the container is not on a volume: recreating the container (after an image update, for example) removes the plugin. Mount it as a volume, or run this installer again after recreating the container.'
+    docker_url_hint  = 'Inside the container, localhost is the container itself: use the address of this computer as seen from the container ({0}). The AI server must accept those connections (Ollama: OLLAMA_HOST=0.0.0.0).'
+    docker_cron_found = 'Cron found in the container ({0}): the automatic actions run in the background.'
+    docker_cron_missing = 'No cron runs the automatic actions of GLPI in the container: the library sync (aisync), learning (ailearn), triage (aitriage) and log purge (aipurge) run in CLI mode.'
+    docker_cron_manual = 'Run this command every minute (a scheduled task of this computer, or a cron job in the image):'
+    docker_poppler_ok = 'poppler-utils found in the container: complex and scanned PDFs are read.'
+    docker_poppler_missing = 'poppler-utils is not in the container: the built-in reader extracts the text of digital PDFs, but scanned PDFs are not read. Add poppler-utils to the image (packages installed in a running container are lost when it is recreated).'
+    mode_mount_short = 'folder mounted from this computer'
     menu_hint        = '↑↓ move · Enter choose'
     filter_hint      = '↑↓ move · type to filter · Enter choose · Esc type a name'
     filter_label     = 'Filter'
@@ -387,7 +417,30 @@ $MsgPt = @{
     uninstalled      = 'O plugin foi desinstalado.'
     cancelled        = 'Cancelado.'
     log_at           = 'Log completo: {0}'
-    unattended_glpi  = 'Modo não interativo: use -GlpiPath (encontradas: {0}).'
+    unattended_glpi  = 'Modo não interativo: use -GlpiPath ou -Docker (encontradas: {0}).'
+    php_missing_docker = 'PHP não encontrado neste computador: só um GLPI em contêiner pode receber o plugin.'
+    docker_where     = 'contêiner {0} → {1}'
+    docker_unavailable = 'O Docker (ou o Podman) não responde: o Docker Desktop está instalado e em execução?'
+    docker_no_access = 'O Docker (ou o Podman) está instalado, mas não responde: inicie o Docker Desktop para procurar também nos contêineres.'
+    docker_no_glpi   = 'Nenhum GLPI encontrado no contêiner {0} (ele está em execução?): use -GlpiPath, a pasta do GLPI dentro do contêiner.'
+    docker_not_glpi  = '{0} não é uma pasta do GLPI no contêiner {1}.'
+    docker_php       = 'PHP {0} no contêiner'
+    docker_ext_hint  = 'Adicione-as à imagem do contêiner.'
+    web_user         = 'Usuário do servidor web: {0}'
+    web_user_ask     = 'Qual usuário roda o servidor web no contêiner (dono dos arquivos do GLPI)?'
+    perms            = 'Dono {0} e permissões'
+    docker_no_link   = 'Um contêiner não pode ser vinculado a este repositório: os arquivos são copiados.'
+    docker_mounted   = 'A pasta {0} do contêiner é montada de {1}: ela é usada como está (atualize os arquivos lá).'
+    docker_mounted_kept = 'A pasta {0} do contêiner é montada de {1}: seus arquivos são mantidos.'
+    docker_volume    = 'Pasta do plugin em um volume do contêiner: {0}'
+    docker_no_volume = 'A pasta {0} do contêiner não está em um volume: recriar o contêiner (após atualizar a imagem, por exemplo) remove o plugin. Monte-a como volume ou rode este instalador de novo depois de recriar o contêiner.'
+    docker_url_hint  = 'Dentro do contêiner, localhost é o próprio contêiner: use o endereço deste computador visto do contêiner ({0}). O servidor de IA precisa aceitar essas conexões (Ollama: OLLAMA_HOST=0.0.0.0).'
+    docker_cron_found = 'Cron encontrado no contêiner ({0}): as ações automáticas rodam em segundo plano.'
+    docker_cron_missing = 'Nenhum cron executa as ações automáticas do GLPI no contêiner: a sincronização da biblioteca (aisync), o aprendizado (ailearn), a triagem (aitriage) e a limpeza do log (aipurge) rodam em modo CLI.'
+    docker_cron_manual = 'Execute este comando a cada minuto (uma tarefa agendada deste computador ou um cron na imagem):'
+    docker_poppler_ok = 'poppler-utils encontrado no contêiner: PDFs complexos e digitalizados são lidos.'
+    docker_poppler_missing = 'O poppler-utils não está no contêiner: o leitor embutido extrai o texto de PDFs digitais, mas PDFs digitalizados não são lidos. Adicione o poppler-utils à imagem (pacotes instalados em um contêiner em execução se perdem quando ele é recriado).'
+    mode_mount_short = 'pasta montada deste computador'
     menu_hint        = '↑↓ mover · Enter escolher'
     filter_hint      = '↑↓ mover · digite para filtrar · Enter escolher · Esc digitar um nome'
     filter_label     = 'Filtro'
@@ -416,9 +469,12 @@ Usage: powershell -ExecutionPolicy Bypass -File .\install.ps1 [options]
 
 Without options the installer asks every question in terminal menus.
 
-  -GlpiPath PATH       GLPI folder (default: detected)
+  -GlpiPath PATH       GLPI folder (default: detected; with -Docker, inside the container)
+  -Docker CONTAINER    GLPI in a running container (Docker Desktop, Podman; default: detected):
+                       the console runs with "docker exec", the plugin is copied with "docker cp"
   -Php PATH            php.exe that runs the GLPI console (default: detected)
-  -Mode Copy|Link      copy the plugin (default) or link it to the repository (junction)
+  -WebUser USER        container: owner of the GLPI files (default: detected)
+  -Mode Copy|Link      copy the plugin (default) or link it to the repository (junction; containers: copy)
   -GlpiUser LOGIN      GLPI super-admin login used by the installation (default: glpi)
   -Provider ID         AI provider: $($Providers -join ', ')
   -BaseUrl URL         API address (Azure resource, local server…)
@@ -436,6 +492,10 @@ Without options the installer asks every question in terminal menus.
   -Yes                 unattended: accept the defaults, ask nothing
   -NoColor             plain output
   -Help                this help
+
+The container command is docker.exe, or podman.exe when docker is missing
+(`$env:TICKETASSISTANT_DOCKER to choose another one). Previous versions are saved in
+%ProgramData%\glpi-ticketassistant\backups (`$env:TICKETASSISTANT_BACKUP_DIR: another folder).
 "@ | Write-Host
 }
 
@@ -864,6 +924,23 @@ $script:PhpExe = ''
 $script:PhpVersion = ''
 $script:PhpCandidates = @()
 $script:GlpiLogin = $(if ($GlpiUser) { $GlpiUser } else { 'glpi' })
+$script:GlpiWhere = ''
+$script:PluginDir = ''
+$script:Container = ''
+$script:DockerCmd = @()
+$script:ContainerUser = ''
+$script:ConsoleExtra = @()
+$DockerGlpiDirs = @('/var/www/glpi', '/var/www/html/glpi', '/var/www/html', '/usr/share/glpi', '/srv/www/glpi', '/opt/glpi', '/app', '/var/www')
+
+# Value of a GLPI_* constant written in the files of GLPI (the first definition wins, as in GLPI)
+function Get-GlpiDefine([string]$Name, [string]$Dir) {
+    foreach ($file in @((Join-Path $Dir 'config\local_define.php'), (Join-Path $Dir 'inc\downstream.php'))) {
+        if (-not (Test-Path -LiteralPath $file)) { continue }
+        $m = Select-String -LiteralPath $file -Pattern ("define\s*\(\s*['""]" + $Name + "['""]\s*,\s*['""]([^'""]+)['""]") -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($m) { return $m.Matches[0].Groups[1].Value }
+    }
+    return ''
+}
 
 function Get-FixedDrives {
     try { return @([IO.DriveInfo]::GetDrives() | Where-Object { $_.DriveType -eq 'Fixed' -and $_.IsReady } | ForEach-Object { $_.RootDirectory.FullName }) }
@@ -872,7 +949,7 @@ function Get-FixedDrives {
 
 # Runs a program and returns its exit code and outputs (no PowerShell error records:
 # with ErrorActionPreference = Stop, Windows PowerShell turns stderr lines into exceptions)
-function Invoke-Capture([string]$FilePath, [string[]]$Arguments = @(), [string]$WorkingDirectory = '') {
+function Invoke-Capture([string]$FilePath, [string[]]$Arguments = @(), [string]$WorkingDirectory = '', [int]$TimeoutMs = 0) {
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = $FilePath
     $psi.Arguments = (($Arguments | ForEach-Object { ConvertTo-Argument $_ }) -join ' ')
@@ -887,11 +964,313 @@ function Invoke-Capture([string]$FilePath, [string[]]$Arguments = @(), [string]$
         $process = [Diagnostics.Process]::Start($psi)
         $stdout = $process.StandardOutput.ReadToEndAsync()
         $stderr = $process.StandardError.ReadToEndAsync()
+        if ($TimeoutMs -gt 0 -and -not $process.WaitForExit($TimeoutMs)) {
+            try { $process.Kill() } catch { }
+            return [pscustomobject]@{ ExitCode = -1; StdOut = ''; StdErr = 'timeout' }
+        }
         $process.WaitForExit()
         return [pscustomobject]@{ ExitCode = $process.ExitCode; StdOut = $stdout.Result; StdErr = $stderr.Result }
     } catch {
         return [pscustomobject]@{ ExitCode = -1; StdOut = ''; StdErr = $_.Exception.Message }
     }
+}
+
+# -----------------------------------------------------------------------------
+# GLPI in a container (Docker Desktop, Podman): the files are read with the PHP
+# of the container (the only program every GLPI image has), the console runs
+# with "docker exec" and the plugin is copied with "docker cp"
+# -----------------------------------------------------------------------------
+
+# php -r PROBE OPERATION ARGUMENT…: reads the files of a container. Same code in
+# install.sh, without double quotes so that it survives the command line of Windows
+$PhpProbe = @'
+$a = array_slice($argv, 1);
+$op = (string) array_shift($a);
+$owner = function ($path) {
+    $uid = @fileowner($path);
+    if ($uid === false) {
+        return '';
+    }
+    if (function_exists('posix_getpwuid')) {
+        $user = posix_getpwuid($uid);
+        if ($user) {
+            return $user['name'];
+        }
+    }
+    return (string) $uid;
+};
+$constant = function ($glpi, $name) {
+    $value = getenv($name);
+    if (is_string($value) && $value !== '') {
+        return $value;
+    }
+    foreach (array($glpi . '/config/local_define.php', $glpi . '/inc/downstream.php') as $file) {
+        if (preg_match('/define\(\s*[\x27\x22]' . $name . '[\x27\x22]\s*,\s*[\x27\x22]([^\x27\x22]+)[\x27\x22]/', (string) @file_get_contents($file), $m)) {
+            return $m[1];
+        }
+    }
+    return '';
+};
+switch ($op) {
+    case 'glpi':
+        foreach ($a as $d) {
+            if (is_file($d . '/bin/console') && is_file($d . '/src/Ticket.php')) {
+                echo $d;
+                exit(0);
+            }
+        }
+        exit(1);
+    case 'version':
+        if (preg_match('/define\(\s*[\x27\x22]GLPI_VERSION[\x27\x22]\s*,\s*[\x27\x22](\d[^\x27\x22]*)[\x27\x22]/', (string) @file_get_contents($a[0] . '/inc/define.php'), $m)) {
+            echo $m[1];
+            exit(0);
+        }
+        $v = array();
+        foreach ((array) @scandir($a[0] . '/version') as $n) {
+            if (preg_match('/^\d/', (string) $n)) {
+                $v[] = $n;
+            }
+        }
+        usort($v, 'version_compare');
+        echo (string) end($v);
+        exit(0);
+    case 'define':
+        if (preg_match('/define\(\x27' . preg_quote($a[0], '/') . '\x27,\s*\x27([^\x27]*)\x27\)/', (string) @file_get_contents($a[1]), $m)) {
+            echo $m[1];
+        }
+        exit(0);
+    case 'const':
+        echo $constant($a[0], $a[1]);
+        exit(0);
+    case 'plugin':
+        $market = $constant($a[0], 'GLPI_MARKETPLACE_DIR');
+        if ($market === '') {
+            $market = $a[0] . '/marketplace';
+        }
+        $p = $market . '/' . $a[1];
+        if (is_file($p . '/setup.php')) {
+            echo $p;
+            exit(0);
+        }
+        $p = $a[0] . '/plugins/' . $a[1];
+        if (file_exists($p) || is_link($p)) {
+            echo $p;
+            exit(0);
+        }
+        exit(1);
+    case 'exists':
+        exit(file_exists($a[0]) ? 0 : 1);
+    case 'owner':
+        foreach ($a as $p) {
+            if ($p !== '' && file_exists($p)) {
+                $o = $owner($p);
+                if ($o !== '' && $o !== 'root' && $o !== '0') {
+                    echo $o;
+                    exit(0);
+                }
+            }
+        }
+        exit(1);
+    case 'user':
+        if (preg_match('/^\d+$/', $a[0])) {
+            exit(0);
+        }
+        if (function_exists('posix_getpwnam')) {
+            exit(posix_getpwnam($a[0]) ? 0 : 1);
+        }
+        exit(preg_match('/^' . preg_quote($a[0], '/') . ':/m', (string) @file_get_contents('/etc/passwd')) ? 0 : 1);
+    case 'tools':
+        $found = array();
+        foreach ($a as $t) {
+            foreach (explode(':', (string) getenv('PATH')) as $d) {
+                if ($d !== '' && is_file($d . '/' . $t) && is_executable($d . '/' . $t)) {
+                    $found[] = $t;
+                    break;
+                }
+            }
+        }
+        echo implode(' ', $found);
+        exit(0);
+    case 'cron':
+        $files = array('/etc/crontab', '/etc/supervisor/supervisord.conf', '/etc/supervisord.conf');
+        foreach (array('/etc/cron.d', '/var/spool/cron', '/var/spool/cron/crontabs', '/etc/supervisor/conf.d', '/etc/supervisord.d') as $d) {
+            foreach ((array) @glob($d . '/*') as $f) {
+                $files[] = $f;
+            }
+        }
+        foreach ($files as $f) {
+            if (is_file($f) && preg_match('/cron\.php|glpi:cron/', (string) @file_get_contents($f))) {
+                echo $f;
+                exit(0);
+            }
+        }
+        // A scheduler that runs front/cron.php (the official image starts one with supervisord)
+        foreach ((array) @glob('/proc/[0-9]*/cmdline') as $f) {
+            $c = trim(str_replace(chr(0), ' ', (string) @file_get_contents($f)));
+            if ((int) basename(dirname($f)) !== getmypid() && preg_match('/cron\.php|glpi:cron/', $c)) {
+                echo strlen($c) > 60 ? substr($c, 0, 57) . '...' : $c;
+                exit(0);
+            }
+        }
+        exit(1);
+}
+exit(2);
+'@
+
+function Initialize-Docker {
+    if ($script:DockerCmd.Count) { return $true }
+    $engine = $env:TICKETASSISTANT_DOCKER
+    if (-not $engine) {
+        foreach ($name in @('docker.exe', 'podman.exe')) {
+            $found = Get-Command $name -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($found) { $engine = $found.Source; break }
+        }
+    }
+    if (-not $engine) { return $false }
+    # One more argument before the commands (the tests run a script with PHP)
+    $command = @($engine)
+    if ($env:TICKETASSISTANT_DOCKER_ARGS) { $command += $env:TICKETASSISTANT_DOCKER_ARGS }
+    $result = Invoke-Capture $command[0] (@($command | Select-Object -Skip 1) + @('ps', '-q')) $RepoDir 15000
+    if ($result.ExitCode -ne 0) { return $false }
+    $script:DockerCmd = $command
+    return $true
+}
+
+function Invoke-Docker([string[]]$Arguments, [int]$TimeoutMs = 0) {
+    if (-not (Initialize-Docker)) { return [pscustomobject]@{ ExitCode = -1; StdOut = ''; StdErr = (T 'docker_unavailable') } }
+    return Invoke-Capture $script:DockerCmd[0] (@($script:DockerCmd | Select-Object -Skip 1) + $Arguments) $RepoDir $TimeoutMs
+}
+
+# The probe in a container: its exit code and its output
+function Invoke-ProbeResult([string[]]$Arguments, [string]$Container = $script:Container) {
+    $result = Invoke-Docker (@('exec', $Container, 'php', '-r', $PhpProbe) + $Arguments) 20000
+    return [pscustomobject]@{ Ok = ($result.ExitCode -eq 0); Text = ([string]$result.StdOut).Trim() }
+}
+
+function Invoke-Probe([string[]]$Arguments, [string]$Container = $script:Container) {
+    $result = Invoke-ProbeResult $Arguments $Container
+    if (-not $result.Ok) { return '' }
+    return $result.Text
+}
+
+# A command as root in the selected container; its output goes to the log
+function Invoke-DockerRoot([string[]]$Arguments) {
+    $result = Invoke-Docker (@('exec', '-u', '0', $script:Container) + $Arguments)
+    Add-Log ("### exec -u 0 $($script:Container) " + ($Arguments -join ' ') + "`r`n" + $result.StdOut + $result.StdErr)
+    if ($result.ExitCode -ne 0) { $script:RunOutput = $result.StdOut + $result.StdErr }
+    return $result.ExitCode -eq 0
+}
+
+function Find-DockerGlpi { # docker:CONTAINER:FOLDER for each running container with a GLPI
+    $found = @()
+    if (-not (Initialize-Docker)) { return , $found }
+    $names = @(((Invoke-Docker @('ps', '--format', '{{.Names}}') 15000).StdOut -split "`r?`n") | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    foreach ($name in $names) {
+        $dir = Invoke-Probe (@('glpi') + $DockerGlpiDirs) $name
+        if ($dir) { $found += "docker:${name}:$dir" }
+    }
+    return , $found
+}
+
+function Split-Candidate([string]$Candidate) { # docker:CONTAINER:FOLDER, or a folder of this computer
+    if ($Candidate.StartsWith('docker:', [StringComparison]::Ordinal)) {
+        $rest = $Candidate.Substring(7)
+        $i = $rest.IndexOf(':')
+        return [pscustomobject]@{ Docker = $rest.Substring(0, $i); Dir = $rest.Substring($i + 1) }
+    }
+    return [pscustomobject]@{ Docker = ''; Dir = $Candidate }
+}
+
+function Get-DockerMounts { # volumes and bind mounts of the selected container
+    $text = (Invoke-Docker @('inspect', '-f', '{{json .Mounts}}', $script:Container)).StdOut
+    try { return @($text | ConvertFrom-Json | ForEach-Object { $_ } | Where-Object { $_.Destination }) } catch { return @() }
+}
+
+function Get-DockerMountAt([string]$Dir) { # source of a mount on exactly this folder ('' = none)
+    foreach ($mount in Get-DockerMounts) {
+        if ([string]::Equals(([string]$mount.Destination).TrimEnd('/'), $Dir.TrimEnd('/'), [StringComparison]::Ordinal)) { return [string]$mount.Source }
+    }
+    return ''
+}
+
+function Test-DockerVolume([string]$Dir) { # the folder survives a new container
+    foreach ($mount in Get-DockerMounts) {
+        $destination = ([string]$mount.Destination).TrimEnd('/')
+        if ($destination -and ([string]::Equals($Dir, $destination, [StringComparison]::Ordinal) -or $Dir.StartsWith($destination + '/', [StringComparison]::Ordinal))) { return $true }
+    }
+    return $false
+}
+
+function Get-DockerHostAddress { # address of this computer as seen from the selected container
+    if (([string](Invoke-Docker @('inspect', '-f', '{{.HostConfig.NetworkMode}}', $script:Container)).StdOut).Trim() -eq 'host') { return 'localhost' }
+    if ([string](Invoke-Docker @('info', '--format', '{{.OperatingSystem}}')).StdOut -match 'Docker Desktop') { return 'host.docker.internal' }
+    $gateway = @(((Invoke-Docker @('inspect', '-f', '{{range .NetworkSettings.Networks}}{{println .Gateway}}{{end}}', $script:Container)).StdOut -split "`r?`n") |
+            ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^[0-9a-fA-F.:]+$' })
+    if ($gateway.Count) { return $gateway[0] }
+    if ((Split-Path -Leaf $script:DockerCmd[0]) -like 'podman*') { return 'host.containers.internal' }
+    return 'host.docker.internal'
+}
+
+function Test-DockerPhp { # PHP and extensions of the selected container
+    $script:PhpVersion = ([string](Invoke-Docker @('exec', $script:Container, 'php', '-r', 'echo PHP_VERSION;')).StdOut).Trim()
+    Write-Ok (T 'docker_php' $script:PhpVersion)
+    $modules = @(((Invoke-Docker @('exec', $script:Container, 'php', '-m')).StdOut -split "`r?`n") | ForEach-Object { $_.Trim().ToLowerInvariant() })
+    $missing = @(@('curl', 'mbstring', 'json', 'gd', 'zip', 'zlib') | Where-Object { $modules -notcontains $_ })
+    if ($missing.Count) { Write-Warn (T 'ext_missing' ($missing -join ' ')); Write-Note (T 'docker_ext_hint') }
+    else { Write-Ok (T 'ext_ok' 'curl mbstring json gd zip zlib') }
+}
+
+function Find-DockerWebUser { # owner of the GLPI files in the container (www-data in the official image)
+    $candidate = $WebUser
+    if (-not $candidate) {
+        $varDir = Invoke-Probe @('const', $script:Glpi, 'GLPI_VAR_DIR')
+        $candidate = Invoke-Probe @('owner', $varDir, "$($script:Glpi)/files", "$($script:Glpi)/config", "$($script:Glpi)/marketplace", "$($script:Glpi)/plugins", $script:Glpi)
+        if ($script:Interactive) {
+            $default = $candidate
+            if (-not $default) { $default = 'www-data' }
+            $candidate = Read-Text (T 'web_user_ask') $default
+        }
+    }
+    if ($candidate -and -not (Invoke-ProbeResult @('user', $candidate)).Ok) { Write-Warn "$candidate?"; $candidate = '' }
+    $script:ContainerUser = $candidate
+    if ($script:ContainerUser) { Write-Ok (T 'web_user' $script:ContainerUser) }
+    # The console refuses root on recent GLPI versions unless told otherwise
+    if (-not $script:ContainerUser -or $script:ContainerUser -eq 'root' -or $script:ContainerUser -eq '0') {
+        $usage = Invoke-Docker @('exec', $script:Container, 'php', "$($script:Glpi)/bin/console", '--help')
+        if (($usage.StdOut + $usage.StdErr) -match '--allow-superuser') { $script:ConsoleExtra = @('--allow-superuser') }
+    }
+}
+
+# GLPI loads a plugin from its marketplace folder first, then from plugins\
+function Get-PluginLocation([string]$Dir) { # folder of the plugin in this GLPI ('' = none)
+    if ($script:Container) { return (Invoke-Probe @('plugin', $Dir, $PluginKey)) }
+    $marketplace = Get-GlpiDefine 'GLPI_MARKETPLACE_DIR' $Dir
+    if (-not $marketplace) { $marketplace = Join-Path $Dir 'marketplace' }
+    if (Test-Path -LiteralPath (Join-Path $marketplace "$PluginKey\setup.php")) { return (Join-Path $marketplace $PluginKey) }
+    $plugins = Join-Path $Dir "plugins\$PluginKey"
+    if (Get-Item -LiteralPath $plugins -Force -ErrorAction SilentlyContinue) { return $plugins }
+    return ''
+}
+
+# Folder that receives the plugin: where GLPI finds it already, or plugins\. In a
+# container, a folder on a volume when there is one (the marketplace folder of
+# the official image), so that a new container keeps it
+function Set-PluginTarget {
+    $script:PluginDir = Get-PluginLocation $script:Glpi
+    if ($script:PluginDir) { return }
+    if (-not $script:Container) { $script:PluginDir = Join-Path $script:Glpi "plugins\$PluginKey"; return }
+    $script:PluginDir = "$($script:Glpi)/plugins/$PluginKey"
+    if (Test-DockerVolume "$($script:Glpi)/plugins") { return }
+    $marketplace = Invoke-Probe @('const', $script:Glpi, 'GLPI_MARKETPLACE_DIR')
+    if (-not $marketplace) { $marketplace = "$($script:Glpi)/marketplace" }
+    # GLPI 10 serves the files of a plugin only from inside its own folder
+    $inside = $marketplace.StartsWith($script:Glpi + '/', [StringComparison]::Ordinal)
+    if ((Test-DockerVolume $marketplace) -and ($inside -or (Test-VersionAtLeast $script:GlpiVersion '11'))) { $script:PluginDir = "$marketplace/$PluginKey" }
+}
+
+function Get-PluginVersionAt([string]$Dir) { # version of the plugin files in this folder
+    if ($script:Container) { return (Invoke-Probe @('define', 'PLUGIN_TICKETASSISTANT_VERSION', "$Dir/setup.php")) }
+    return Get-PhpDefine 'PLUGIN_TICKETASSISTANT_VERSION' (Join-Path $Dir 'setup.php')
 }
 
 function Test-VersionAtLeast([string]$Version, [string]$Minimum) {
@@ -907,12 +1286,26 @@ function Test-Admin {
     try { return ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) } catch { return $false }
 }
 
-function Invoke-Console([string]$Message, [string[]]$Arguments, [string]$StdinText = $null) {
+# Program, arguments and folder that run the GLPI console (a container: docker exec)
+function Get-ConsoleCommand([string[]]$Arguments, [bool]$Stdin = $false) {
     # Messages of GLPI and of the plugin in the language of the installer
     $lang = @()
     if ($script:UiLang -eq 'pt') { $lang = @('--lang=pt_BR') }
-    $all = @('bin\console', '--no-interaction', '--no-ansi') + $lang + $Arguments
-    return Invoke-Step -Message $Message -FilePath $script:PhpExe -Arguments $all -WorkingDirectory $script:Glpi -StdinText $StdinText
+    $console = @('--no-interaction', '--no-ansi') + $script:ConsoleExtra + $lang + $Arguments
+    if (-not $script:Container) {
+        return [pscustomobject]@{ FilePath = $script:PhpExe; Arguments = @(@('bin\console') + $console); Directory = $script:Glpi }
+    }
+    $options = @('exec', '-w', $script:Glpi)
+    if ($script:ContainerUser) { $options += @('-u', $script:ContainerUser) }
+    # Standard input only when something is written to it (the API key)
+    if ($Stdin) { $options += '-i' }
+    $all = @($script:DockerCmd | Select-Object -Skip 1) + $options + @($script:Container, 'php', 'bin/console') + $console
+    return [pscustomobject]@{ FilePath = $script:DockerCmd[0]; Arguments = $all; Directory = $RepoDir }
+}
+
+function Invoke-Console([string]$Message, [string[]]$Arguments, [string]$StdinText = $null) {
+    $command = Get-ConsoleCommand $Arguments ([bool]$StdinText)
+    return Invoke-Step -Message $Message -FilePath $command.FilePath -Arguments $command.Arguments -WorkingDirectory $command.Directory -StdinText $StdinText
 }
 
 function Get-PhpVersionOf([string]$Exe) {
@@ -925,11 +1318,13 @@ function Get-PhpVersionOf([string]$Exe) {
 
 function Test-GlpiFolder([string]$Dir) {
     if (-not $Dir) { return $false }
+    if ($script:Container) { return [bool](Invoke-Probe @('glpi', $Dir)) }
     # Markers present in GLPI 10, 11 and 12 (front\central.php and inc\define.php are gone in 11)
     return (Test-Path -LiteralPath (Join-Path $Dir 'bin\console')) -and (Test-Path -LiteralPath (Join-Path $Dir 'src\Ticket.php'))
 }
 
 function Get-GlpiVersionOf([string]$Dir) {
+    if ($script:Container) { return (Invoke-Probe @('version', $Dir)) }
     $define = Join-Path $Dir 'inc\define.php'
     if (Test-Path -LiteralPath $define) {
         $m = Select-String -LiteralPath $define -Pattern "define\s*\(\s*['""]GLPI_VERSION['""]\s*,\s*['""](\d[^'""]*)['""]" -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -943,13 +1338,12 @@ function Get-GlpiVersionOf([string]$Dir) {
     return ''
 }
 
-function Get-InstalledPluginVersion {
-    return Get-PhpDefine 'PLUGIN_TICKETASSISTANT_VERSION' (Join-Path $script:Glpi "plugins\$PluginKey\setup.php")
-}
+function Get-InstalledPluginVersion { return (Get-PluginVersionAt $script:PluginDir) } # '' = none
 
 function Read-PluginStatus {
     $script:PluginStatus = @{}
-    $result = Invoke-Capture $script:PhpExe @('bin\console', '--no-interaction', '--no-ansi', 'plugins:ticketassistant:status', '--porcelain') $script:Glpi
+    $command = Get-ConsoleCommand @('plugins:ticketassistant:status', '--porcelain')
+    $result = Invoke-Capture $command.FilePath $command.Arguments $command.Directory
     if ($result.ExitCode -ne 0) { return $false }
     foreach ($line in ($result.StdOut -split "`r?`n")) {
         $text = [string]$line
@@ -1006,12 +1400,12 @@ function Step-Checks {
         Write-Err (T 'not_repo'); exit 1
     }
     Write-Ok (T 'plugin_repo' $PluginVersion $RepoDir)
-    if (-not (Test-Admin)) {
-        Show-Box 'warn' '' @((T 'not_admin'))
-        if ($script:Interactive -and (Read-Confirm (T 'elevate') $false)) { Restart-Elevated }
-    }
     $script:PhpCandidates = Find-PhpCandidates
-    if (-not $script:PhpCandidates.Count) { Write-Err (T 'php_missing'); exit 1 }
+    if (-not $script:PhpCandidates.Count) {
+        # A GLPI in a container runs with the PHP of the container
+        if (Initialize-Docker) { Write-Warn (T 'php_missing_docker'); return }
+        Write-Err (T 'php_missing'); exit 1
+    }
     $script:PhpExe = $script:PhpCandidates[0].Path
     $script:PhpVersion = $script:PhpCandidates[0].Version
     W ('  ' + $script:Sym.ok + ' ') 'Green'; W (T 'php_found' $script:PhpVersion ''); WL $script:PhpExe 'DarkGray'
@@ -1091,53 +1485,104 @@ function Find-Glpi {
     return , @($found)
 }
 
-function Get-GlpiDescription([string]$Dir) {
-    $dest = Join-Path $Dir "plugins\$PluginKey"
-    $item = Get-Item -LiteralPath $dest -ErrorAction SilentlyContinue
-    if ($item -and $item.LinkType) { return (T 'plugin_link' (@($item.Target)[0])) }
-    $version = Get-PhpDefine 'PLUGIN_TICKETASSISTANT_VERSION' (Join-Path $dest 'setup.php')
+function Get-GlpiDescription([string]$Dir) { # one line: plugin state in this GLPI
+    $location = Get-PluginLocation $Dir
+    if (-not $location) { return (T 'plugin_none') }
+    if (-not $script:Container) {
+        $item = Get-Item -LiteralPath $location -Force -ErrorAction SilentlyContinue
+        if ($item -and $item.LinkType) { return (T 'plugin_link' (@($item.Target)[0])) }
+    }
+    $version = Get-PluginVersionAt $location
     if ($version) { return (T 'plugin_files' $version) }
     return (T 'plugin_none')
+}
+
+function Get-CandidateLabel([string]$Candidate) { # GLPI VERSION  WHERE<TAB>state of the plugin
+    $parts = Split-Candidate $Candidate
+    $saved = $script:Container
+    $script:Container = $parts.Docker
+    try {
+        $where = $parts.Dir
+        if ($parts.Docker) { $where = T 'docker_where' $parts.Docker $parts.Dir }
+        return "GLPI $(Get-GlpiVersionOf $parts.Dir)  $where`t$(Get-GlpiDescription $parts.Dir)"
+    } finally { $script:Container = $saved }
 }
 
 function Step-Glpi {
     Show-Step 2 (T 'step_glpi')
     $dir = ''
-    if ($GlpiPath) {
+    if ($Docker) {
+        if (-not (Initialize-Docker)) { Write-Err (T 'docker_unavailable'); exit 1 }
+        $script:Container = $Docker
+        $dir = $GlpiPath
+        if (-not $dir) { $dir = Invoke-Probe (@('glpi') + $DockerGlpiDirs) }
+        if (-not $dir) { Write-Err (T 'docker_no_glpi' $Docker); exit 1 }
+    } elseif ($GlpiPath) {
         $dir = $GlpiPath
     } else {
         W ('  ' + $script:Sym.info + ' ') 'Cyan'; W ((T 'searching') + '…')
-        $candidates = Find-Glpi
+        $local = Find-Glpi
+        $containers = Find-DockerGlpi
+        $candidates = @($local) + @($containers)
         W ("`r" + (' ' * ((Get-WindowWidth) - 1)) + "`r")
+        if (-not $script:DockerCmd.Count -and ($env:TICKETASSISTANT_DOCKER -or (Get-Command docker.exe, podman.exe -ErrorAction SilentlyContinue))) {
+            Write-Note (T 'docker_no_access')
+        }
+        $candidate = ''
         if (-not $candidates.Count) {
             Write-Warn (T 'none_found')
             if (-not $script:Interactive) { Write-Err (T 'unattended_glpi' 0); exit 1 }
         } elseif (-not $script:Interactive) {
             if ($candidates.Count -gt 1) { Write-Err (T 'unattended_glpi' ($candidates -join ', ')); exit 1 }
-            $dir = $candidates[0]
+            $candidate = $candidates[0]
         } else {
             Write-Ok (T 'found_n' $candidates.Count)
-            $items = @($candidates | ForEach-Object { "GLPI $(Get-GlpiVersionOf $_)  $_`t$(Get-GlpiDescription $_)" }) + @((T 'other_path'))
+            $items = @($candidates | ForEach-Object { Get-CandidateLabel $_ }) + @((T 'other_path'))
             $choice = Show-Menu (T 'choose_glpi') $items 0
-            if ($choice -lt $candidates.Count) { $dir = $candidates[$choice] }
+            if ($choice -lt $candidates.Count) { $candidate = $candidates[$choice] }
+        }
+        if ($candidate) {
+            $parts = Split-Candidate $candidate
+            $script:Container = $parts.Docker
+            $dir = $parts.Dir
         }
     }
     while ($true) {
         if (-not $dir) { $dir = Read-Text (T 'type_path') 'C:\xampp\htdocs\glpi' }
+        if ($script:Container) {
+            if (Test-GlpiFolder $dir) { break }
+            Write-Err (T 'docker_not_glpi' $dir $script:Container); exit 1
+        }
         $dir = $dir.Trim().TrimEnd('\').Trim('"')
         if (Test-GlpiFolder $dir) { break }
         Write-Err (T 'not_glpi' $dir)
         if (-not $script:Interactive) { exit 1 }
         $dir = ''
     }
-    $script:Glpi = (Resolve-Path -LiteralPath $dir).Path
+    if ($script:Container) {
+        $script:Glpi = $dir
+        $script:GlpiWhere = T 'docker_where' $script:Container $dir
+    } else {
+        if (-not $script:PhpExe) { Write-Err (T 'php_missing'); exit 1 }
+        $script:Glpi = (Resolve-Path -LiteralPath $dir).Path
+        $script:GlpiWhere = $script:Glpi
+    }
     $script:GlpiVersion = Get-GlpiVersionOf $script:Glpi
-    W ('  ' + $script:Sym.ok + ' ') 'Green'; W (T 'glpi_selected' $script:GlpiVersion ''); WL $script:Glpi 'DarkGray'
+    W ('  ' + $script:Sym.ok + ' ') 'Green'; W (T 'glpi_selected' $script:GlpiVersion ''); WL $script:GlpiWhere 'DarkGray'
+    if ($script:Container) {
+        Test-DockerPhp
+    } elseif (-not (Test-Admin)) {
+        # Writing into folders such as C:\inetpub and creating the scheduled task need it (not a container)
+        Show-Box 'warn' '' @((T 'not_admin'))
+        if ($script:Interactive -and (Read-Confirm (T 'elevate') $false)) { Restart-Elevated }
+    }
     if ($script:GlpiVersion) {
         if (-not (Test-VersionAtLeast $script:GlpiVersion $MinGlpi)) { Write-Err (T 'glpi_too_old' $script:GlpiVersion $MinGlpi); exit 1 }
         if (Test-VersionAtLeast $script:GlpiVersion $MaxGlpi) { Write-Warn (T 'glpi_untested' $script:GlpiVersion ($MaxGlpi -replace '\.99$', '')) }
-        Select-PhpForGlpi
+        if (-not $script:Container) { Select-PhpForGlpi }
     }
+    if ($script:Container) { Find-DockerWebUser }
+    Set-PluginTarget
 }
 
 # -----------------------------------------------------------------------------
@@ -1158,32 +1603,103 @@ function Test-Writable([string]$Dir) {
 
 function Backup-Plugin {
     $script:BackupFile = ''
-    $dest = Join-Path $script:Glpi "plugins\$PluginKey"
-    $item = Get-Item -LiteralPath $dest -ErrorAction SilentlyContinue
-    if (-not $item) { return $true }
-    if ($item.LinkType) { $item.Delete(); return $true }   # removes the junction, not the repository
-    $previous = Get-PhpDefine 'PLUGIN_TICKETASSISTANT_VERSION' (Join-Path $dest 'setup.php')
+    $dest = $script:PluginDir
+    if ($script:Container) {
+        if (-not (Invoke-ProbeResult @('exists', $dest)).Ok) { return $true }
+    } else {
+        $item = Get-Item -LiteralPath $dest -ErrorAction SilentlyContinue
+        if (-not $item) { return $true }
+        if ($item.LinkType) { $item.Delete(); return $true }   # removes the junction, not the repository
+    }
+    $previous = Get-PluginVersionAt $dest
     if (-not $previous) { $previous = 'unknown' }
-    $base = Join-Path $env:ProgramData 'glpi-ticketassistant\backups'
+    $base = $env:TICKETASSISTANT_BACKUP_DIR
+    if (-not $base) { $base = Join-Path $env:ProgramData 'glpi-ticketassistant\backups' }
     if (-not (Test-Writable $base)) { $base = Join-Path $env:LOCALAPPDATA 'glpi-ticketassistant\backups' }
     New-Item -ItemType Directory -Path $base -Force | Out-Null
     $script:BackupFile = Join-Path $base ("$PluginKey-$previous-" + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.zip')
     # Pending line while the archive is written, replaced by the result
     if ($script:Interactive) { W ('  ' + $script:Sym.info + ' ') 'Cyan'; W ((T 'backing_up') + '…') }
     $clear = { if ($script:Interactive) { W ("`r" + (' ' * ((Get-WindowWidth) - 1)) + "`r") } }
+    $work = ''
     try {
-        Compress-Archive -Path (Join-Path $dest '*') -DestinationPath $script:BackupFile -Force
+        $source = $dest
+        if ($script:Container) {
+            # The folder of the container comes here first
+            $work = Join-Path ([IO.Path]::GetTempPath()) ('ticketassistant-backup-' + [guid]::NewGuid().ToString('N'))
+            New-Item -ItemType Directory -Path $work -Force | Out-Null
+            $source = Join-Path $work $PluginKey
+            $result = Invoke-Docker @('cp', "$($script:Container):$dest", $source)
+            if ($result.ExitCode -ne 0) { throw ($result.StdOut + $result.StdErr).Trim() }
+        }
+        Compress-Archive -Path (Join-Path $source '*') -DestinationPath $script:BackupFile -Force
         & $clear; Write-Ok (T 'backing_up')
         Write-Note (T 'backup_done' $script:BackupFile)
         return $true
     } catch {
         & $clear; Write-Err (T 'backing_up'); Write-Note $_.Exception.Message
         return $false
+    } finally {
+        if ($work) { Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue }
     }
 }
 
+function Get-CopyArguments([string]$Destination) { # robocopy: the plugin without the files of the repository
+    return @($RepoDir, $Destination, '/MIR', '/R:1', '/W:1', '/NFL', '/NDL', '/NJH', '/NJS', '/NP', '/XD') +
+    ($ExcludeDirs | ForEach-Object { Join-Path $RepoDir $_ }) + @('/XF') + $ExcludeFiles
+}
+
+# The new files go next to the old ones (GLPI ignores a folder named
+# ticketassistant.new), then replace them in one move
+function Copy-PluginToContainer {
+    $dest = $script:PluginDir
+    $stage = Join-Path ([IO.Path]::GetTempPath()) ('ticketassistant-stage-' + [guid]::NewGuid().ToString('N'))
+    $copy = Join-Path $stage $PluginKey
+    try {
+        $result = Invoke-Capture 'robocopy.exe' (Get-CopyArguments $copy) $RepoDir
+        Add-Log ($result.StdOut + $result.StdErr)
+        $script:RunOutput = $result.StdOut + $result.StdErr
+        if ($result.ExitCode -lt 0 -or $result.ExitCode -gt 7) { return $false }
+        if (-not (Invoke-DockerRoot @('mkdir', '-p', $dest.Substring(0, $dest.LastIndexOf('/'))))) { return $false }
+        if (-not (Invoke-DockerRoot @('rm', '-rf', "$dest.new"))) { return $false }
+        $result = Invoke-Docker @('cp', $copy, "$($script:Container):$dest.new")
+        Add-Log ("### cp $copy $($script:Container):$dest.new`r`n" + $result.StdOut + $result.StdErr)
+        if ($result.ExitCode -ne 0) { $script:RunOutput = $result.StdOut + $result.StdErr; return $false }
+        if (-not (Invoke-DockerRoot @('rm', '-rf', $dest))) { return $false }
+        return (Invoke-DockerRoot @('mv', "$dest.new", $dest))
+    } finally {
+        Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Install-PluginFilesDocker {
+    $dest = $script:PluginDir
+    $script:InstallMode = 'Copy'
+    if ($Mode -eq 'Link') { Write-Info (T 'docker_no_link') }
+    # A folder mounted from this computer (a development checkout, for example) is used as it is
+    $source = Get-DockerMountAt $dest
+    if ($source) { $script:InstallMode = 'Mounted'; Write-Ok (T 'docker_mounted' $dest $source); return $true }
+    $parent = $dest.Substring(0, $dest.LastIndexOf('/'))
+    if (Test-DockerVolume $parent) { Write-Ok (T 'docker_volume' $parent) } else { Show-Box 'warn' '' @((T 'docker_no_volume' $parent)) }
+    if (-not (Backup-Plugin)) { return $false }
+    $message = T 'copying' (T 'docker_where' $script:Container $dest)
+    if ($script:Interactive) { W ('  ' + $script:Sym.info + ' ') 'Cyan'; W ($message + '…') }
+    $copied = Copy-PluginToContainer
+    if ($script:Interactive) { W ("`r" + (' ' * ((Get-WindowWidth) - 1)) + "`r") }
+    if (-not $copied) { Write-Err $message; Show-OutputBox $message; return $false }
+    Write-Ok $message
+    $user = $script:ContainerUser
+    if (-not $user) { $user = 'root' }
+    # docker cp gives every file of Windows the mode 755: directories 755, files 644
+    $fixed = Invoke-DockerRoot @('chmod', '-R', 'a-x,u=rwX,go=rX', $dest)
+    if ($fixed -and $script:ContainerUser) { $fixed = Invoke-DockerRoot @('chown', '-R', $script:ContainerUser, $dest) }
+    if ($fixed) { Write-Ok (T 'perms' $user) } else { Write-Err (T 'perms' $user) }
+    return $true
+}
+
 function Install-PluginFiles {
-    $dest = Join-Path $script:Glpi "plugins\$PluginKey"
+    if ($script:Container) { return (Install-PluginFilesDocker) }
+    $dest = $script:PluginDir
     # Archive extracted directly in plugins\ and installer run from there
     $existing = Get-Item -LiteralPath $dest -ErrorAction SilentlyContinue
     if ($existing -and -not $existing.LinkType -and ($existing.FullName.TrimEnd('\') -eq $RepoDir.TrimEnd('\'))) {
@@ -1199,8 +1715,8 @@ function Install-PluginFiles {
         $choice = Show-Menu (T 'mode_ask') @((T 'mode_copy'), (T 'mode_link')) $default
         $script:InstallMode = @('Copy', 'Link')[$choice]
     }
-    if (-not (Test-Writable (Join-Path $script:Glpi 'plugins'))) {
-        Write-Err (T 'plugins_not_writable' (Join-Path $script:Glpi 'plugins'))
+    if (-not (Test-Writable (Split-Path -Parent $dest))) {
+        Write-Err (T 'plugins_not_writable' (Split-Path -Parent $dest))
         if ($script:Interactive -and -not (Test-Admin) -and (Read-Confirm (T 'elevate') $true)) { Restart-Elevated }
         return $false
     }
@@ -1216,9 +1732,7 @@ function Install-PluginFiles {
         } else { Write-Ok (T 'linking' $dest) }
         return $true
     }
-    $arguments = @($RepoDir, $dest, '/MIR', '/R:1', '/W:1', '/NFL', '/NDL', '/NJH', '/NJS', '/NP', '/XD') +
-    ($ExcludeDirs | ForEach-Object { Join-Path $RepoDir $_ }) + @('/XF') + $ExcludeFiles
-    if (-not (Invoke-Step -Message (T 'copying' $dest) -FilePath 'robocopy.exe' -Arguments $arguments -WorkingDirectory $RepoDir -SuccessCodes @(0, 1, 2, 3, 4, 5, 6, 7))) {
+    if (-not (Invoke-Step -Message (T 'copying' $dest) -FilePath 'robocopy.exe' -Arguments (Get-CopyArguments $dest) -WorkingDirectory $RepoDir -SuccessCodes @(0, 1, 2, 3, 4, 5, 6, 7))) {
         Show-OutputBox (T 'copying' $dest)
         return $false
     }
@@ -1312,6 +1826,13 @@ function Set-AiConnection {
             { $_ -in @('ollama', 'compatible') } {
                 $url = $ProviderUrl[$new]
                 if ($current -eq $new -and $script:PluginStatus['base_url']) { $url = $script:PluginStatus['base_url'] }
+                # Inside a container, localhost is the container itself
+                if ($script:Container -and $url -match '^(https?://)(localhost|127\.0\.0\.1)([:/].*)?$') {
+                    $scheme = $Matches[1]
+                    $rest = [string]$Matches[3]
+                    $address = Get-DockerHostAddress
+                    if ($address -ne 'localhost') { $url = $scheme + $address + $rest; Write-Note (T 'docker_url_hint' $address) }
+                }
                 $arguments += '--base-url=' + (Read-Text (T 'base_url_ask') $url)
             }
             default { $arguments += '--base-url=' }
@@ -1384,6 +1905,10 @@ function Set-Preferences {
 
 function Set-AiUnattended {
     $arguments = @('plugins:ticketassistant:configure')
+    if ($script:Container -and $BaseUrl -match '^https?://(localhost|127\.0\.0\.1)([:/]|$)') {
+        $address = Get-DockerHostAddress
+        if ($address -ne 'localhost') { Write-Warn (T 'docker_url_hint' $address) }
+    }
     if ($Provider) { $arguments += "--provider=$Provider" }
     if ($BaseUrl) { $arguments += "--base-url=$BaseUrl" }
     if ($ApiVersion) { $arguments += "--api-version=$ApiVersion" }
@@ -1441,7 +1966,22 @@ function Test-CronTask {
     }
 }
 
+# The cron of GLPI in a container: in the container (the official image runs one), or a
+# command of this computer that runs it with "docker exec"
+function Set-CronTaskDocker {
+    $found = Invoke-Probe @('cron')
+    if ($found) { Write-Ok (T 'docker_cron_found' $found); $script:CronSummary = T 'found'; return }
+    Show-Box 'warn' '' @((T 'docker_cron_missing'))
+    $command = @($script:DockerCmd) + @('exec')
+    if ($script:ContainerUser) { $command += @('-u', $script:ContainerUser) }
+    $command += @($script:Container, 'php', "$($script:Glpi)/front/cron.php")
+    Write-Info (T 'docker_cron_manual')
+    Write-Note (($command | ForEach-Object { ConvertTo-Argument $_ }) -join ' ')
+    $script:CronSummary = T 'missing'
+}
+
 function Set-CronTask {
+    if ($script:Container) { Set-CronTaskDocker; return }
     if (Test-CronTask) { Write-Ok (T 'cron_found'); $script:CronSummary = T 'found'; return }
     $name = 'GLPI cron'
     $cronFile = Join-Path $script:Glpi 'front\cron.php'
@@ -1487,6 +2027,13 @@ function Find-Poppler {
 }
 
 function Test-PdfTools {
+    if ($script:Container) {
+        # Installed in a running container, a package is lost when the container is recreated
+        $tools = Invoke-Probe @('tools', 'pdftotext', 'pdftoppm')
+        if ($tools -match 'pdftotext' -and $tools -match 'pdftoppm') { Write-Ok (T 'docker_poppler_ok'); $script:PdfSummary = 'poppler-utils' }
+        else { Write-Info (T 'docker_poppler_missing'); $script:PdfSummary = T 'builtin_reader' }
+        return
+    }
     $dir = Find-Poppler
     if (-not $dir) {
         Write-Info (T 'poppler_missing')
@@ -1514,10 +2061,12 @@ function New-DemoData {
 function Show-Summary {
     [void](Read-PluginStatus)
     Show-Title ($script:Sym.star + ' ' + (T 'summary_title'))
-    Show-KeyValue (T 's_glpi') "$($script:GlpiVersion)  $($script:Glpi)" 'ok'
+    Show-KeyValue (T 's_glpi') "$($script:GlpiVersion)  $($script:GlpiWhere)" 'ok'
     $version = $PluginVersion
     if ($script:PluginStatus['version']) { $version = $script:PluginStatus['version'] }
-    $modeText = $(if ($script:InstallMode -eq 'Link') { T 'mode_link_short' } else { T 'mode_copy_short' })
+    $modeText = T 'mode_copy_short'
+    if ($script:InstallMode -eq 'Link') { $modeText = T 'mode_link_short' }
+    elseif ($script:InstallMode -eq 'Mounted') { $modeText = T 'mode_mount_short' }
     Show-KeyValue (T 's_plugin') "$version  $modeText" 'ok'
     $ai = $script:AiSummary
     if (-not $ai) { $ai = T 'ai_not_configured' }
@@ -1567,8 +2116,17 @@ function Invoke-UninstallFlow {
     } elseif (-not $Yes) { Write-Info (T 'un_cancelled'); return }
     [void](Invoke-Console (T 'deactivating') @('plugin:deactivate', $PluginKey))
     if (-not (Invoke-Console (T 'uninstalling') @('plugin:uninstall', $PluginKey))) { Show-OutputBox (T 'console_error'); return }
-    $dest = Join-Path $script:Glpi "plugins\$PluginKey"
-    if ((Test-Path -LiteralPath $dest) -and ((-not $script:Interactive) -or (Read-Confirm (T 'remove_folder' $dest) $true))) {
+    $dest = $script:PluginDir
+    if ($script:Container) {
+        $source = Get-DockerMountAt $dest
+        if ($source) {
+            Write-Info (T 'docker_mounted_kept' $dest $source)
+        } elseif ((Invoke-ProbeResult @('exists', $dest)).Ok -and ((-not $script:Interactive) -or (Read-Confirm (T 'remove_folder' $dest) $true))) {
+            if ((Backup-Plugin) -and (Invoke-DockerRoot @('rm', '-rf', $dest))) {
+                if ($script:BackupFile) { Write-Ok (T 'removed' $script:BackupFile) }
+            }
+        }
+    } elseif ((Test-Path -LiteralPath $dest) -and ((-not $script:Interactive) -or (Read-Confirm (T 'remove_folder' $dest) $true))) {
         if (Backup-Plugin) {
             if (Test-Path -LiteralPath $dest) { Remove-Item -LiteralPath $dest -Recurse -Force }
             if ($script:BackupFile) { Write-Ok (T 'removed' $script:BackupFile) }

@@ -102,11 +102,11 @@ poppler-utils or a provider that reads PDF files natively (OpenAI, Anthropic).
 
 ### With the installer (recommended)
 
-The installer finds the GLPI installations of the machine, picks a compatible PHP and the web
-server user, copies the plugin, installs and enables it, connects the AI provider (menu of
-providers, list of the models, connection test), builds the library of solved tickets and checks
-the cron and the PDF tools. Arrow keys and Enter, in English or Portuguese; it asks before
-changing anything.
+The installer finds the GLPI installations of the machine and of its containers (Docker,
+Podman), picks a compatible PHP and the web server user, copies the plugin, installs and enables
+it, connects the AI provider (menu of providers, list of the models, connection test), builds the
+library of solved tickets and checks the cron and the PDF tools. Arrow keys and Enter, in English
+or Portuguese; it asks before changing anything.
 
 **Linux**
 
@@ -123,6 +123,11 @@ git clone https://github.com/flpsantoro/glpi-ai-ticket-assistant.git
 cd glpi-ai-ticket-assistant
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
+
+**GLPI in a container** (the official `glpi/glpi` image or any other): the same installers find
+the running containers and install the plugin with `docker exec` and `docker cp`, on a volume when
+there is one, without PHP on the host: `bash install.sh --docker glpi` or `.\install.ps1 -Docker glpi`
+([details](docs/INSTALL.md#glpi-in-a-container)).
 
 Run it again later to update the plugin, change the AI provider, test the connection or
 uninstall. Unattended mode for automation: `sudo bash install.sh --help` or
