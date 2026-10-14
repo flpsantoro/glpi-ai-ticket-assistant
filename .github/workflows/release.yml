@@ -1,0 +1,36 @@
+name: Release
+
+# Push a tag such as v1.0.0: the archive ready to extract in GLPI's plugins/
+# directory (folder "ticketassistant") is attached to a GitHub release.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that the tag matches the plugin version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          grep -q "define('PLUGIN_TICKETASSISTANT_VERSION', '${VERSION}')" setup.php \
+            || { echo "setup.php does not declare version ${VERSION}"; exit 1; }
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+      - name: Build the archives (files marked export-ignore are left out)
+        run: |
+          mkdir -p dist
+          git archive --prefix=ticketassistant/ --format=tar HEAD | bzip2 > "dist/ticketassistant-${VERSION}.tar.bz2"
+          git archive --prefix=ticketassistant/ --format=zip -o "dist/ticketassistant-${VERSION}.zip" HEAD
+          (cd dist && sha256sum * > SHA256SUMS)
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ env.VERSION }}
+          files: dist/*
+          generate_release_notes: true

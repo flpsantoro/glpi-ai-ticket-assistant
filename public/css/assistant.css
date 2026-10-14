@@ -1,0 +1,72 @@
+/*
+ * GLPI AI Ticket Assistant — ticket form styles.
+ * Note: never use the class ".small" inside GLPI modals (core rule
+ * "#page .small { width: 1% }" breaks the text letter by letter).
+ */
+
+.ticketassistant-timeline .btn {
+    white-space: nowrap;
+}
+
+#ticketassistant-modal .ticketassistant-tab-content {
+    background: var(--tblr-bg-surface, #fff);
+}
+
+#ticketassistant-modal .ticketassistant-preview {
+    max-height: 45vh;
+    overflow-y: auto;
+    line-height: 1.5;
+}
+
+#ticketassistant-modal .ticketassistant-preview p,
+#ticketassistant-modal .ticketassistant-preview ul,
+#ticketassistant-modal .ticketassistant-preview ol {
+    margin-bottom: 0.6rem;
+}
+
+#ticketassistant-modal .ticketassistant-preview ul,
+#ticketassistant-modal .ticketassistant-preview ol {
+    padding-left: 1.4rem;
+}
+
+#ticketassistant-modal .ticketassistant-preview pre {
+    white-space: pre-wrap;
+    background: var(--tblr-bg-surface-secondary, #f6f8fb);
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+#ticketassistant-modal .ticketassistant-loading {
+    min-height: 220px;
+}
+
+#ticketassistant-modal .ticketassistant-feedback .btn.active {
+    color: #fff;
+}
+
+#ticketassistant-modal .ticketassistant-feedback .btn-outline-success.active {
+    background-color: var(--tblr-success, #2fb344);
+}
+
+#ticketassistant-modal .ticketassistant-feedback .btn-outline-danger.active {
+    background-color: var(--tblr-danger, #d63939);
+}
+
+.ticketassistant-improve .dropdown-menu .ti {
+    width: 1.1rem;
+}
+
+/* A flex column stretches the group and Bootstrap lets both buttons grow:
+   keep the group compact and the toggle of the modes narrow */
+.ticketassistant-improve {
+    align-self: flex-start;
+}
+
+.ticketassistant-improve > .dropdown-toggle-split {
+    flex-grow: 0;
+}
+
+/* Own small text class: GLPI core breaks ".small" inside #page and modals */
+.ticketassistant-fs-sm {
+    font-size: 0.875em;
+}

@@ -1,0 +1,1681 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: ticketassistant 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/flpsantoro/glpi-ai-ticket-assistant/issues\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: ajax/admin.php:33
+msgid "You are not allowed to change the setup."
+msgstr "Vous n'êtes pas autorisé à modifier la configuration."
+
+#: ajax/assistant.php:37
+msgid "Your session has expired: reload the page."
+msgstr "Votre session a expiré : rechargez la page."
+
+#: front/categoryguideline.form.php:26
+msgid "AI guidelines saved."
+msgstr "Consignes IA enregistrées."
+
+#: front/config.form.php:24
+msgid "Configuration saved."
+msgstr "Configuration enregistrée."
+
+#: front/knowledge.php:42
+msgid "%1$d tickets distilled, %2$d embedded, %3$d errors (US$ %4$s)."
+msgstr "%1$d tickets distillés, %2$d vectorisés, %3$d erreurs (US$ %4$s)."
+
+#: front/knowledge.php:49
+msgid "Stopped: the daily budget of automatic actions is reached."
+msgstr "Arrêt : le budget quotidien des actions automatiques est atteint."
+
+#: front/knowledge.php:55
+msgid "Evaluation done on %1$d tickets: %2$s%% right on the first suggestion."
+msgstr "Évaluation réalisée sur %1$d tickets : %2$s%% de réussite sur la première suggestion."
+
+#: hook.php:169
+#: src/Knowledge/CaseLibrary.php:470
+msgid "AI Ticket Assistant: synchronizes the library of solved tickets"
+msgstr "AI Ticket Assistant : synchronise la bibliothèque des tickets résolus"
+
+#: hook.php:170
+#: src/Knowledge/Learner.php:52
+msgid "AI Ticket Assistant: learns from solved tickets (distillation and embeddings)"
+msgstr "AI Ticket Assistant : apprend des tickets résolus (distillation et embeddings)"
+
+#: hook.php:171
+#: src/Knowledge/Triage.php:147
+msgid "AI Ticket Assistant: suggests the type and category of new tickets"
+msgstr "AI Ticket Assistant : suggère le type et la catégorie des nouveaux tickets"
+
+#: hook.php:172
+#: src/Log.php:221
+msgid "AI Ticket Assistant: applies the retention policy of the AI assistant log"
+msgstr "AI Ticket Assistant : applique la politique de conservation du journal de l'assistant IA"
+
+#: src/Assistant.php:120
+msgid "Internal error of the assistant. If it persists, contact the administrator."
+msgstr "Erreur interne de l'assistant. Si elle persiste, contactez l'administrateur."
+
+#: src/Assistant.php:401
+#: src/TicketHooks.php:141
+#: src/TicketHooks.php:242
+msgid "Write a draft in the editor first."
+msgstr "Rédigez d'abord un brouillon dans l'éditeur."
+
+#: src/Assistant.php:557
+msgid "You cannot update this ticket."
+msgstr "Vous ne pouvez pas modifier ce ticket."
+
+#: src/Assistant.php:570
+msgid "This category is not available for the entity of the ticket."
+msgstr "Cette catégorie n'est pas disponible pour l'entité du ticket."
+
+#: src/Assistant.php:573
+msgid "This category cannot be used with this ticket type."
+msgstr "Cette catégorie ne peut pas être utilisée avec ce type de ticket."
+
+#: src/Assistant.php:582
+msgid "Nothing to apply."
+msgstr "Rien à appliquer."
+
+#: src/Assistant.php:595
+msgid "Classification applied to the ticket."
+msgstr "Classification appliquée au ticket."
+
+#: src/Assistant.php:596
+msgid "GLPI refused the update of the ticket."
+msgstr "GLPI a refusé la mise à jour du ticket."
+
+#: src/Assistant.php:609
+msgid "A knowledge base article can be written once the ticket has a solution."
+msgstr "Un article de la base de connaissances peut être rédigé dès que le ticket a une solution."
+
+#: src/Assistant.php:66
+msgid "Ticket not found."
+msgstr "Ticket introuvable."
+
+#: src/Assistant.php:662
+msgid "You cannot create knowledge base articles."
+msgstr "Vous ne pouvez pas créer d'articles dans la base de connaissances."
+
+#: src/Assistant.php:667
+msgid "The article needs a title and a content."
+msgstr "L'article doit avoir un titre et un contenu."
+
+#: src/Assistant.php:678
+msgid "GLPI refused the creation of the article."
+msgstr "GLPI a refusé la création de l'article."
+
+#: src/Assistant.php:69
+msgid "You cannot see this ticket."
+msgstr "Vous n'avez pas accès à ce ticket."
+
+#: src/Assistant.php:694
+msgid "Draft article created: review it and choose its audience to publish it."
+msgstr "Brouillon d'article créé : relisez-le et choisissez sa cible pour le publier."
+
+#: src/Assistant.php:719
+msgid "This ticket was processed a moment ago. Wait %d s to generate again."
+msgstr "Ce ticket vient d'être traité. Attendez %d s pour générer à nouveau."
+
+#: src/Assistant.php:72
+msgid "The AI assistant is not enabled."
+msgstr "L'assistant IA n'est pas activé."
+
+#: src/Assistant.php:730
+msgid "You reached the limit of %d uses of the assistant per hour. Try again later."
+msgstr "Vous avez atteint la limite de %d utilisations de l'assistant par heure. Réessayez plus tard."
+
+#: src/Assistant.php:739
+msgid "The daily budget of the AI assistant is exhausted. Try again tomorrow or contact the administrator."
+msgstr "Le budget quotidien de l'assistant IA est épuisé. Réessayez demain ou contactez l'administrateur."
+
+#: src/Assistant.php:821
+msgid "Service desk team"
+msgstr "Équipe du support"
+
+#: src/Assistant.php:85
+#: src/Assistant.php:123
+msgid "Unknown action."
+msgstr "Action inconnue."
+
+#: src/Assistant.php:88
+msgid "This action of the assistant is disabled."
+msgstr "Cette action de l'assistant est désactivée."
+
+#: src/Attachments.php:121
+msgid "page %d"
+msgstr "page %d"
+
+#: src/CategoryGuideline.php:144
+msgid "Instructions added to the AI prompt for tickets of this category: how the team handles them, which information to ask for, which procedure or team applies, when to escalate. Keep them short and concrete."
+msgstr "Instructions ajoutées au prompt de l'IA pour les tickets de cette catégorie : comment l'équipe les traite, quelles informations demander, quelle procédure ou équipe s'applique, quand escalader. Restez bref et concret."
+
+#: src/CategoryGuideline.php:151
+msgid "Example: always ask for the asset tag and a screenshot of the error; access requests require the approval of the manager."
+msgstr "Exemple : demandez toujours le numéro d'inventaire et une capture de l'erreur ; les demandes d'accès nécessitent l'accord du responsable."
+
+#: src/CategoryGuideline.php:156
+msgid "Also apply to the sub-categories"
+msgstr "Appliquer aussi aux sous-catégories"
+
+#: src/CategoryGuideline.php:39
+msgid "AI guideline"
+msgid_plural "AI guidelines"
+msgstr[0] "Consigne IA"
+msgstr[1] "Consignes IA"
+
+#: src/CategoryGuideline.php:55
+#: src/Config.php:36
+#: src/Profile.php:31
+#: src/TicketHooks.php:36
+#: src/TicketHooks.php:84
+msgid "AI assistant"
+msgstr "Assistant IA"
+
+#: src/Config.php:439
+msgid "The address \"%s\" must start with http:// or https://."
+msgstr "L'adresse \"%s\" doit commencer par http:// ou https://."
+
+#: src/Config.php:445
+msgid "The poppler-utils directory does not exist on the server: PDF reading will use the system PATH."
+msgstr "Le répertoire de poppler-utils n'existe pas sur le serveur : la lecture des PDF utilisera le PATH du système."
+
+#: src/Config.php:454
+msgid "Invalid masking pattern ignored: %s"
+msgstr "Motif de masquage invalide ignoré : %s"
+
+#: src/ConfigForm.php:100
+#: src/ConfigForm.php:119
+#: src/ConfigForm.php:277
+msgid "API key"
+msgstr "Clé d'API"
+
+#: src/ConfigForm.php:103
+msgid "Paste the key here"
+msgstr "Collez la clé ici"
+
+#: src/ConfigForm.php:103
+msgid "•••••••• (key saved: fill in to replace it)"
+msgstr "•••••••• (clé enregistrée : renseignez pour la remplacer)"
+
+#: src/ConfigForm.php:104
+msgid "Stored encrypted with the key of the GLPI installation and never displayed again. Leave empty to keep the current key."
+msgstr "Stockée chiffrée avec la clé de l'installation GLPI et plus jamais affichée. Laissez vide pour conserver la clé actuelle."
+
+#: src/ConfigForm.php:106
+msgid "Remove the key"
+msgstr "Supprimer la clé"
+
+#: src/ConfigForm.php:113
+#: src/ConfigForm.php:356
+msgid "Save"
+msgstr "Enregistrer"
+
+#: src/ConfigForm.php:114
+msgid "Test the connection"
+msgstr "Tester la connexion"
+
+#: src/ConfigForm.php:115
+msgid "Enable the assistant"
+msgstr "Activer l'assistant"
+
+#: src/ConfigForm.php:119
+#: src/ConfigForm.php:275
+msgid "API address"
+msgstr "Adresse de l'API"
+
+#: src/ConfigForm.php:121
+msgid "Still missing before the assistant can work: %s."
+msgstr "Il manque encore pour que l'assistant fonctionne : %s."
+
+#: src/ConfigForm.php:131
+msgid "Actions"
+msgstr "Actions"
+
+#: src/ConfigForm.php:132
+msgid "Model and generation"
+msgstr "Modèle et génération"
+
+#: src/ConfigForm.php:133
+msgid "Context and attachments"
+msgstr "Contexte et pièces jointes"
+
+#: src/ConfigForm.php:134
+msgid "Learning and classification"
+msgstr "Apprentissage et classification"
+
+#: src/ConfigForm.php:135
+msgid "Privacy"
+msgstr "Confidentialité"
+
+#: src/ConfigForm.php:136
+msgid "Costs and limits"
+msgstr "Coûts et limites"
+
+#: src/ConfigForm.php:137
+msgid "Writing style"
+msgstr "Style rédactionnel"
+
+#: src/ConfigForm.php:138
+msgid "Diagnosis"
+msgstr "Diagnostic"
+
+#: src/ConfigForm.php:152
+msgid "Analyze the ticket: summary, technical strategy and reply draft"
+msgstr "Analyser le ticket : résumé, stratégie technique et brouillon de réponse"
+
+#: src/ConfigForm.php:153
+msgid "Improve my text: rewrite the draft of the technician (6 modes)"
+msgstr "Améliorer mon texte : réécrit le brouillon du technicien (6 modes)"
+
+#: src/ConfigForm.php:154
+msgid "Classification: suggest type, category and urgency"
+msgstr "Classification : suggère type, catégorie et urgence"
+
+#: src/ConfigForm.php:155
+msgid "Knowledge base: write an article from a solved ticket"
+msgstr "Base de connaissances : rédige un article à partir d'un ticket résolu"
+
+#: src/ConfigForm.php:157
+msgid "Nothing is ever sent to the requester automatically: drafts are inserted in the editor and the technician reviews and sends them."
+msgstr "Rien n'est jamais envoyé automatiquement au demandeur : les brouillons sont insérés dans l'éditeur et le technicien les relit et les envoie."
+
+#: src/ConfigForm.php:163
+msgid "Model type"
+msgstr "Type de modèle"
+
+#: src/ConfigForm.php:165
+msgid "Reasoning model (reasoning effort, no temperature)"
+msgstr "Modèle de raisonnement (effort de raisonnement, sans température)"
+
+#: src/ConfigForm.php:166
+msgid "Standard model (temperature)"
+msgstr "Modèle standard (température)"
+
+#: src/ConfigForm.php:168
+msgid "Temperature"
+msgstr "Température"
+
+#: src/ConfigForm.php:170
+msgid "JSON answers"
+msgstr "Réponses JSON"
+
+#: src/ConfigForm.php:172
+msgid "Automatic (provider default)"
+msgstr "Automatique (valeur du fournisseur)"
+
+#: src/ConfigForm.php:173
+msgid "Strict JSON schema"
+msgstr "Schéma JSON strict"
+
+#: src/ConfigForm.php:174
+msgid "JSON mode"
+msgstr "Mode JSON"
+
+#: src/ConfigForm.php:175
+msgid "Instructions only"
+msgstr "Instructions seulement"
+
+#: src/ConfigForm.php:177
+msgid "Output limit parameter"
+msgstr "Paramètre de limite de sortie"
+
+#: src/ConfigForm.php:179
+#: src/ConfigForm.php:185
+msgid "Automatic"
+msgstr "Automatique"
+
+#: src/ConfigForm.php:183
+msgid "The model reads images (vision)"
+msgstr "Le modèle lit les images (vision)"
+
+#: src/ConfigForm.php:184
+msgid "Image detail"
+msgstr "Détail des images"
+
+#: src/ConfigForm.php:185
+msgid "High"
+msgstr "Élevé"
+
+#: src/ConfigForm.php:185
+msgid "Low (cheaper)"
+msgstr "Faible (moins cher)"
+
+#: src/ConfigForm.php:186
+msgid "Timeout (seconds)"
+msgstr "Délai d'attente (secondes)"
+
+#: src/ConfigForm.php:187
+msgid "New attempts (network, 429, 5xx)"
+msgstr "Nouvelles tentatives (réseau, 429, 5xx)"
+
+#: src/ConfigForm.php:188
+msgid "Use the proxy configured in GLPI (local and private addresses are always reached directly)"
+msgstr "Utiliser le proxy configuré dans GLPI (les adresses locales et privées sont toujours jointes directement)"
+
+#: src/ConfigForm.php:191
+msgid "Per action"
+msgstr "Par action"
+
+#: src/ConfigForm.php:192
+msgid "On reasoning models the output limit includes the reasoning tokens: keep about twice the expected text."
+msgstr "Sur les modèles de raisonnement, la limite de sortie inclut les jetons de raisonnement : prévoyez environ le double du texte attendu."
+
+#: src/ConfigForm.php:193
+#: src/Stats.php:185
+#: src/Stats.php:258
+msgid "Action"
+msgstr "Action"
+
+#: src/ConfigForm.php:194
+msgid "Output limit (tokens)"
+msgstr "Limite de sortie (jetons)"
+
+#: src/ConfigForm.php:194
+msgid "Reasoning effort"
+msgstr "Effort de raisonnement"
+
+#: src/ConfigForm.php:195
+msgid "(not sent)"
+msgstr "(non envoyé)"
+
+#: src/ConfigForm.php:198
+#: src/Stats.php:227
+#: src/TicketHooks.php:207
+msgid "Analyze the ticket"
+msgstr "Analyser le ticket"
+
+#: src/ConfigForm.php:199
+#: src/Stats.php:228
+#: src/TicketHooks.php:127
+msgid "Improve my text"
+msgstr "Améliorer mon texte"
+
+#: src/ConfigForm.php:200
+#: src/ConfigForm.php:281
+#: src/Stats.php:229
+#: src/TicketHooks.php:194
+msgid "Classification"
+msgstr "Classification"
+
+#: src/ConfigForm.php:201
+#: src/Stats.php:230
+msgid "Knowledge base article"
+msgstr "Article de la base de connaissances"
+
+#: src/ConfigForm.php:212
+msgid "Context size (characters)"
+msgstr "Taille du contexte (caractères)"
+
+#: src/ConfigForm.php:213
+msgid "When the history does not fit, the oldest followups are left out."
+msgstr "Quand l'historique ne tient pas, les suivis les plus anciens sont omis."
+
+#: src/ConfigForm.php:214
+msgid "Private followups and tasks"
+msgstr "Suivis et tâches privés"
+
+#: src/ConfigForm.php:216
+msgid "Only those the technician is allowed to see (recommended)"
+msgstr "Seulement ceux que le technicien peut voir (recommandé)"
+
+#: src/ConfigForm.php:217
+msgid "All of them, flagged as internal notes"
+msgstr "Tous, signalés comme notes internes"
+
+#: src/ConfigForm.php:218
+msgid "None"
+msgstr "Aucun"
+
+#: src/ConfigForm.php:220
+msgid "Include the assets linked to the ticket"
+msgstr "Inclure les éléments liés au ticket"
+
+#: src/ConfigForm.php:221
+msgid "Include the solution templates of the entity as style references"
+msgstr "Inclure les gabarits de solution de l'entité comme références de style"
+
+#: src/ConfigForm.php:223
+msgid "Images"
+msgstr "Images"
+
+#: src/ConfigForm.php:224
+msgid "Send attached images"
+msgstr "Envoyer les images jointes"
+
+#: src/ConfigForm.php:225
+msgid "Maximum images"
+msgstr "Nombre maximal d'images"
+
+#: src/ConfigForm.php:226
+msgid "Maximum size sent (MB)"
+msgstr "Taille maximale envoyée (Mo)"
+
+#: src/ConfigForm.php:227
+msgid "Longest side (pixels)"
+msgstr "Plus grand côté (pixels)"
+
+#: src/ConfigForm.php:228
+msgid "Larger images are reduced instead of being skipped."
+msgstr "Les images plus grandes sont réduites au lieu d'être ignorées."
+
+#: src/ConfigForm.php:231
+msgid "Read attached PDFs"
+msgstr "Lire les PDF joints"
+
+#: src/ConfigForm.php:232
+msgid "Maximum PDFs"
+msgstr "Nombre maximal de PDF"
+
+#: src/ConfigForm.php:233
+msgid "Characters per PDF"
+msgstr "Caractères par PDF"
+
+#: src/ConfigForm.php:234
+msgid "Scanned PDF: pages sent as images"
+msgstr "PDF numérisé : pages envoyées comme images"
+
+#: src/ConfigForm.php:235
+msgid "Reads tables and images inside the PDF without poppler-utils; costs more tokens."
+msgstr "Lit les tableaux et les images du PDF sans poppler-utils ; consomme plus de jetons."
+
+#: src/ConfigForm.php:235
+msgid "Send the PDF file itself to providers that read PDF (OpenAI, Anthropic)"
+msgstr "Envoyer le fichier PDF lui-même aux fournisseurs qui lisent le PDF (OpenAI, Anthropic)"
+
+#: src/ConfigForm.php:236
+msgid "poppler-utils directory (optional)"
+msgstr "Répertoire de poppler-utils (facultatif)"
+
+#: src/ConfigForm.php:237
+msgid "Empty: pdftotext and pdftoppm are searched in the PATH of the web server. Without them, a built-in reader extracts the text of digital PDFs; scanned PDFs need pdftoppm or the option above."
+msgstr "Vide : pdftotext et pdftoppm sont recherchés dans le PATH du serveur web. Sans eux, un lecteur intégré extrait le texte des PDF numériques ; les PDF numérisés nécessitent pdftoppm ou l'option ci-dessus."
+
+#: src/ConfigForm.php:239
+msgid "Other documents"
+msgstr "Autres documents"
+
+#: src/ConfigForm.php:240
+msgid "Read Office/OpenDocument files and text files (logs, CSV, JSON…)"
+msgstr "Lire les fichiers Office/OpenDocument et les fichiers texte (logs, CSV, JSON…)"
+
+#: src/ConfigForm.php:241
+msgid "Maximum documents"
+msgstr "Nombre maximal de documents"
+
+#: src/ConfigForm.php:242
+msgid "Characters per document"
+msgstr "Caractères par document"
+
+#: src/ConfigForm.php:248
+msgid "Solved and closed tickets form a library that the assistant uses as references for new tickets and to suggest their classification. The library is synchronized daily by the automatic action \"aisync\"."
+msgstr "Les tickets résolus et clos forment une bibliothèque que l'assistant utilise comme références pour les nouveaux tickets et pour suggérer leur classification. L'action automatique « aisync » la synchronise chaque jour."
+
+#: src/ConfigForm.php:250
+msgid "Similar tickets sent with an analysis"
+msgstr "Tickets similaires envoyés avec une analyse"
+
+#: src/ConfigForm.php:251
+msgid "Minimum similarity of a reference (0–1)"
+msgstr "Similarité minimale d'une référence (0–1)"
+
+#: src/ConfigForm.php:252
+msgid "Less similar tickets are not sent. Similarity of the words in full-text search (0.10 suits most libraries), of the embeddings in semantic search (0.3–0.5 depending on the model)."
+msgstr "Les tickets moins similaires ne sont pas envoyés. Similarité des mots en recherche plein texte (0.10 convient à la plupart des bibliothèques), des embeddings en recherche sémantique (0.3–0.5 selon le modèle)."
+
+#: src/ConfigForm.php:253
+msgid "Only use solved tickets of the entities of the technician"
+msgstr "N'utiliser que les tickets résolus des entités du technicien"
+
+#: src/ConfigForm.php:255
+msgid "Learning with the AI (optional)"
+msgstr "Apprentissage par l'IA (facultatif)"
+
+#: src/ConfigForm.php:256
+msgid "Distill solved tickets into reusable, anonymized records"
+msgstr "Distiller les tickets résolus en fiches réutilisables et anonymisées"
+
+#: src/ConfigForm.php:256
+msgid "Generic summary, resolution steps, keywords and the classification the AI would give: it improves the references and points to misclassified tickets. Automatic action \"ailearn\"."
+msgstr "Résumé générique, étapes de résolution, mots-clés et la classification que l'IA donnerait : améliore les références et signale les tickets mal classés. Action automatique « ailearn »."
+
+#: src/ConfigForm.php:257
+#: src/Knowledge/Triage.php:148
+msgid "Tickets per run"
+msgstr "Tickets par exécution"
+
+#: src/ConfigForm.php:258
+msgid "Daily budget of automatic actions (US$)"
+msgstr "Budget quotidien des actions automatiques (US$)"
+
+#: src/ConfigForm.php:260
+msgid "Semantic search (embeddings, optional)"
+msgstr "Recherche sémantique (embeddings, facultatif)"
+
+#: src/ConfigForm.php:261
+msgid "Enable semantic search"
+msgstr "Activer la recherche sémantique"
+
+#: src/ConfigForm.php:261
+msgid "Finds similar tickets written with different words. Needs an embeddings model."
+msgstr "Trouve des tickets similaires écrits avec d'autres mots. Nécessite un modèle d'embeddings."
+
+#: src/ConfigForm.php:262
+msgid "Embeddings model"
+msgstr "Modèle d'embeddings"
+
+#: src/ConfigForm.php:263
+msgid "Dimensions"
+msgstr "Dimensions"
+
+#: src/ConfigForm.php:264
+msgid "0 = model default"
+msgstr "0 = valeur du modèle"
+
+#: src/ConfigForm.php:265
+msgid "Recent tickets scanned"
+msgstr "Tickets récents parcourus"
+
+#: src/ConfigForm.php:266
+msgid "Use another connection for embeddings (required with Anthropic, which has no embeddings API)"
+msgstr "Utiliser une autre connexion pour les embeddings (obligatoire avec Anthropic, qui n'a pas d'API d'embeddings)"
+
+#: src/ConfigForm.php:267
+msgid "Provider"
+msgstr "Fournisseur"
+
+#: src/ConfigForm.php:279
+msgid "•••••••• (key saved)"
+msgstr "•••••••• (clé enregistrée)"
+
+#: src/ConfigForm.php:282
+msgid "Let the AI choose among the categories of similar tickets"
+msgstr "Laisser l'IA choisir parmi les catégories des tickets similaires"
+
+#: src/ConfigForm.php:282
+msgid "Without it the suggestion only comes from the vote of similar solved tickets (free and instant)."
+msgstr "Sinon, la suggestion vient uniquement du vote des tickets résolus similaires (gratuit et instantané)."
+
+#: src/ConfigForm.php:283
+msgid "Neighbours considered"
+msgstr "Voisins pris en compte"
+
+#: src/ConfigForm.php:285
+msgid "Automatic triage of new tickets"
+msgstr "Tri automatique des nouveaux tickets"
+
+#: src/ConfigForm.php:286
+msgid "Automatic action \"aitriage\", every 5 minutes. The suggestion is shown on the ticket."
+msgstr "Action automatique « aitriage », toutes les 5 minutes. La suggestion s'affiche sur le ticket."
+
+#: src/ConfigForm.php:286
+msgid "Suggest a classification when a ticket is created"
+msgstr "Suggérer une classification à la création d'un ticket"
+
+#: src/ConfigForm.php:287
+msgid "Only tickets created without category"
+msgstr "Seulement les tickets créés sans catégorie"
+
+#: src/ConfigForm.php:288
+msgid "Use the AI for automatic triage (costs tokens)"
+msgstr "Utiliser l'IA pour le tri automatique (consomme des jetons)"
+
+#: src/ConfigForm.php:289
+msgid "Apply automatically above the threshold"
+msgstr "Appliquer automatiquement au-dessus du seuil"
+
+#: src/ConfigForm.php:289
+msgid "Measure the accuracy first (Learning page) before enabling it."
+msgstr "Mesurez d'abord la précision (page Apprentissage) avant de l'activer."
+
+#: src/ConfigForm.php:290
+msgid "Confidence threshold (0–1)"
+msgstr "Seuil de confiance (0–1)"
+
+#: src/ConfigForm.php:297
+msgid "Masking applies to the text sent to the AI (ticket, history, extracted documents, drafts) and to the library of solved tickets. Images are sent as they are: disable them if your policy requires it."
+msgstr "Le masquage s'applique au texte envoyé à l'IA (ticket, historique, documents extraits, brouillons) et à la bibliothèque des tickets résolus. Les images sont envoyées telles quelles : désactivez-les si votre politique l'exige."
+
+#: src/ConfigForm.php:306
+msgid "Custom patterns (one per line: LABEL=/regular expression/)"
+msgstr "Motifs personnalisés (un par ligne : LIBELLE=/expression régulière/)"
+
+#: src/ConfigForm.php:309
+msgid "Send the requester's name (greeting by first name)"
+msgstr "Envoyer le nom du demandeur (salutation par le prénom)"
+
+#: src/ConfigForm.php:310
+msgid "Keep the generated texts in the log (audit and reuse of recent analyses)"
+msgstr "Conserver les textes générés dans le journal (audit et réutilisation des analyses récentes)"
+
+#: src/ConfigForm.php:311
+msgid "Keep generated texts (days)"
+msgstr "Conserver les textes générés (jours)"
+
+#: src/ConfigForm.php:312
+msgid "0 = forever"
+msgstr "0 = indéfiniment"
+
+#: src/ConfigForm.php:313
+msgid "Keep log rows (days)"
+msgstr "Conserver les lignes du journal (jours)"
+
+#: src/ConfigForm.php:314
+msgid "0 = forever. Automatic action \"aipurge\"."
+msgstr "0 = indéfiniment. Action automatique « aipurge »."
+
+#: src/ConfigForm.php:320
+msgid "Input price (US$ per million tokens)"
+msgstr "Prix en entrée (US$ par million de jetons)"
+
+#: src/ConfigForm.php:321
+msgid "Output price (US$ per million tokens)"
+msgstr "Prix en sortie (US$ par million de jetons)"
+
+#: src/ConfigForm.php:322
+msgid "Costs are estimated with these prices: keep them up to date with the price list of your model, otherwise the budgets cannot work. Local models: 0."
+msgstr "Les coûts sont estimés avec ces prix : tenez-les à jour avec la grille tarifaire de votre modèle, sinon les budgets ne peuvent pas fonctionner. Modèles locaux : 0."
+
+#: src/ConfigForm.php:323
+msgid "Daily budget of the technicians (US$)"
+msgstr "Budget quotidien des techniciens (US$)"
+
+#: src/ConfigForm.php:324
+msgid "0 = no budget"
+msgstr "0 = pas de budget"
+
+#: src/ConfigForm.php:325
+msgid "Uses per technician per hour"
+msgstr "Utilisations par technicien et par heure"
+
+#: src/ConfigForm.php:326
+msgid "0 = no limit"
+msgstr "0 = pas de limite"
+
+#: src/ConfigForm.php:327
+msgid "Interval between two analyses of a ticket (s)"
+msgstr "Intervalle entre deux analyses d'un ticket (s)"
+
+#: src/ConfigForm.php:328
+msgid "During the interval the last analysis is shown again."
+msgstr "Pendant l'intervalle, la dernière analyse est réaffichée."
+
+#: src/ConfigForm.php:335
+msgid "Organization name (used in the prompts)"
+msgstr "Nom de l'organisation (utilisé dans les prompts)"
+
+#: src/ConfigForm.php:335
+msgid "e.g. ACME IT service desk"
+msgstr "ex. : Centre de services informatiques ACME"
+
+#: src/ConfigForm.php:336
+msgid "Language of the answers"
+msgstr "Langue des réponses"
+
+#: src/ConfigForm.php:337
+msgid "Communication standard for the messages to the requester"
+msgstr "Charte de communication des messages au demandeur"
+
+#: src/ConfigForm.php:339
+msgid "Signature"
+msgstr "Signature"
+
+#: src/ConfigForm.php:340
+msgid "Added by the server to every reply. Placeholders: {name}, {firstname}, {entity}, {organization}. Allowed HTML: <br>, <strong>, <em>. Empty = no signature."
+msgstr "Ajoutée par le serveur à chaque réponse. Variables : {name}, {firstname}, {entity}, {organization}. HTML autorisé : <br>, <strong>, <em>. Vide = pas de signature."
+
+#: src/ConfigForm.php:341
+msgid "Additional instructions for the AI"
+msgstr "Instructions supplémentaires pour l'IA"
+
+#: src/ConfigForm.php:343
+msgid "- Never repeat passwords or credentials written in the ticket.\n- Ask for at most 4 pieces of information per message.\n- When the solution depends on a supplier, tell the requester that the case was forwarded."
+msgstr "- Ne répétez jamais les mots de passe ou identifiants écrits dans le ticket.\n- Demandez au maximum 4 informations par message.\n- Quand la solution dépend d'un fournisseur, indiquez au demandeur que le dossier a été transmis."
+
+#: src/ConfigForm.php:345
+msgid "Instructions per category are set in Setup > Dropdowns > ITIL categories > \"AI assistant\" tab."
+msgstr "Les instructions par catégorie se définissent dans Configuration > Intitulés > Catégories ITIL > onglet « Assistant IA »."
+
+#: src/ConfigForm.php:365
+msgid "Testing…"
+msgstr "Test en cours…"
+
+#: src/ConfigForm.php:366
+msgid "Listing models…"
+msgstr "Liste des modèles…"
+
+#: src/ConfigForm.php:367
+msgid "%d models found: choose one in the Model field."
+msgstr "%d modèles trouvés : choisissez-en un dans le champ Modèle."
+
+#: src/ConfigForm.php:368
+msgid "The provider returned no model list."
+msgstr "Le fournisseur n'a renvoyé aucune liste de modèles."
+
+#: src/ConfigForm.php:369
+msgid "Save the settings before testing them."
+msgstr "Enregistrez la configuration avant de la tester."
+
+#: src/ConfigForm.php:370
+msgid "Request failed (HTTP %s)."
+msgstr "La requête a échoué (HTTP %s)."
+
+#: src/ConfigForm.php:371
+msgid "Documentation of the provider"
+msgstr "Documentation du fournisseur"
+
+#: src/ConfigForm.php:38
+#: src/Profile.php:170
+msgid "GLPI AI Ticket Assistant"
+msgstr "GLPI AI Ticket Assistant"
+
+#: src/ConfigForm.php:40
+#: src/ConfigForm.php:202
+#: src/KnowledgePage.php:31
+#: src/Menu.php:70
+#: src/Stats.php:29
+msgid "Learning from solved tickets"
+msgstr "Apprentissage à partir des tickets résolus"
+
+#: src/ConfigForm.php:41
+#: src/KnowledgePage.php:33
+#: src/Menu.php:75
+msgid "Statistics"
+msgstr "Statistiques"
+
+#: src/ConfigForm.php:428
+msgid "GLPI version"
+msgstr "Version de GLPI"
+
+#: src/ConfigForm.php:429
+msgid "PHP version"
+msgstr "Version de PHP"
+
+#: src/ConfigForm.php:43
+msgid "ACTIVE"
+msgstr "ACTIF"
+
+#: src/ConfigForm.php:430
+#: src/ConfigForm.php:431
+#: src/ConfigForm.php:432
+msgid "available"
+msgstr "disponible"
+
+#: src/ConfigForm.php:430
+#: src/ConfigForm.php:431
+msgid "missing"
+msgstr "absent"
+
+#: src/ConfigForm.php:431
+msgid "(image reduction)"
+msgstr "(réduction des images)"
+
+#: src/ConfigForm.php:432
+msgid "(Office documents)"
+msgstr "(documents Office)"
+
+#: src/ConfigForm.php:432
+msgid "missing: Office documents are listed by name only"
+msgstr "absent : les documents Office sont seulement listés par leur nom"
+
+#: src/ConfigForm.php:433
+msgid "(poppler-utils)"
+msgstr "(poppler-utils)"
+
+#: src/ConfigForm.php:433
+msgid "allowed"
+msgstr "autorisé"
+
+#: src/ConfigForm.php:433
+msgid "disabled in php.ini"
+msgstr "désactivé dans php.ini"
+
+#: src/ConfigForm.php:435
+msgid "not found: the built-in reader extracts the text of digital PDFs (poppler-utils handles complex layouts better)"
+msgstr "introuvable : le lecteur intégré extrait le texte des PDF numériques (poppler-utils gère mieux les mises en page complexes)"
+
+#: src/ConfigForm.php:437
+msgid "not found: scanned PDFs are not read (install poppler-utils, or send the PDF itself to providers that read PDF)"
+msgstr "introuvable : les PDF numérisés ne sont pas lus (installez poppler-utils ou envoyez le PDF lui-même aux fournisseurs qui lisent les PDF)"
+
+#: src/ConfigForm.php:439
+msgid "GLPI proxy"
+msgstr "Proxy de GLPI"
+
+#: src/ConfigForm.php:439
+msgid "none"
+msgstr "aucun"
+
+#: src/ConfigForm.php:44
+msgid "INACTIVE"
+msgstr "INACTIF"
+
+#: src/ConfigForm.php:442
+#: src/Knowledge/CaseLibrary.php:45
+msgid "Library of solved tickets"
+msgstr "Bibliothèque des tickets résolus"
+
+#: src/ConfigForm.php:443
+msgid "%1$d tickets, %2$d distilled, %3$d with embeddings — last synchronization: %4$s"
+msgstr "%1$d tickets, %2$d distillés, %3$d avec embeddings — dernière synchronisation : %4$s"
+
+#: src/ConfigForm.php:451
+msgid "Automatic action %s"
+msgstr "Action automatique %s"
+
+#: src/ConfigForm.php:461
+msgid "Automatic actions must run in CLI mode: the cron of the server (a scheduled task on Windows) runs php front/cron.php every minute."
+msgstr "Les actions automatiques doivent tourner en mode CLI : le cron du serveur (une tâche planifiée sous Windows) exécute php front/cron.php chaque minute."
+
+#: src/ConfigForm.php:472
+msgid "disabled"
+msgstr "désactivée"
+
+#: src/ConfigForm.php:472
+msgid "enabled"
+msgstr "activée"
+
+#: src/ConfigForm.php:473
+msgid "last run"
+msgstr "dernière exécution"
+
+#: src/ConfigForm.php:51
+msgid "Quick setup"
+msgstr "Configuration rapide"
+
+#: src/ConfigForm.php:54
+msgid "Choose the AI provider and fill in the address, the model and the key."
+msgstr "Choisissez le fournisseur d'IA et renseignez l'adresse, le modèle et la clé."
+
+#: src/ConfigForm.php:55
+msgid "Save, then test the connection."
+msgstr "Enregistrez, puis testez la connexion."
+
+#: src/ConfigForm.php:56
+msgid "Enable the assistant. Technicians see the buttons according to their profile (Administration > Profiles > AI assistant)."
+msgstr "Activez l'assistant. Les techniciens voient les boutons selon leur profil (Administration > Profils > Assistant IA)."
+
+#: src/ConfigForm.php:61
+msgid "AI provider"
+msgstr "Fournisseur d'IA"
+
+#: src/ConfigForm.php:79
+msgid "API address (base URL)"
+msgstr "Adresse de l'API (URL de base)"
+
+#: src/ConfigForm.php:82
+msgid "Leave empty to use the default address of the provider. Azure: https://<resource>.openai.azure.com"
+msgstr "Laissez vide pour utiliser l'adresse par défaut du fournisseur. Azure : https://<ressource>.openai.azure.com"
+
+#: src/ConfigForm.php:85
+msgid "Deployment"
+msgstr "Déploiement"
+
+#: src/ConfigForm.php:85
+#: src/ConfigForm.php:119
+#: src/Stats.php:309
+msgid "Model"
+msgstr "Modèle"
+
+#: src/ConfigForm.php:89
+msgid "List the models offered by the provider (uses the saved settings)"
+msgstr "Lister les modèles proposés par le fournisseur (utilise la configuration enregistrée)"
+
+#: src/ConfigForm.php:92
+msgid "A model accepting images is recommended (screenshots, scanned documents)."
+msgstr "Un modèle acceptant les images est recommandé (captures d'écran, documents numérisés)."
+
+#: src/ConfigForm.php:95
+#: src/ConfigForm.php:276
+msgid "API version"
+msgstr "Version de l'API"
+
+#: src/ConfigForm.php:97
+msgid "\"v1\" for the new Azure v1 API."
+msgstr "« v1 » pour la nouvelle API v1 d'Azure."
+
+#: src/Console/SyncCommand.php:38
+#: front/knowledge.php:33
+msgid "Library synchronized: %1$d added, %2$d updated, %3$d unchanged, %4$d removed."
+msgstr "Bibliothèque synchronisée : %1$d ajoutés, %2$d mis à jour, %3$d inchangés, %4$d supprimés."
+
+#: src/Diagnostics.php:102
+msgid "Save the address and the key before listing the models."
+msgstr "Enregistrez l'adresse et la clé avant de lister les modèles."
+
+#: src/Diagnostics.php:37
+msgid "Fill in and SAVE the address, the model and the key before testing."
+msgstr "Renseignez et ENREGISTREZ l'adresse, le modèle et la clé avant de tester."
+
+#: src/Diagnostics.php:74
+msgid "Connection OK — %1$s answered in %2$d ms (%3$d tokens, US$ %4$s)."
+msgstr "Connexion OK — %1$s a répondu en %2$d ms (%3$d jetons, US$ %4$s)."
+
+#: src/Diagnostics.php:85
+msgid "Embeddings OK (%d dimensions)."
+msgstr "Embeddings OK (%d dimensions)."
+
+#: src/Diagnostics.php:87
+msgid "Embeddings failed:"
+msgstr "Échec des embeddings :"
+
+#: src/DocumentReader.php:326
+msgid "Slide %d"
+msgstr "Diapositive %d"
+
+#: src/DocumentReader.php:415
+msgid "Sheet %d"
+msgstr "Feuille %d"
+
+#: src/Knowledge/CaseLibrary.php:483
+msgid "%1$d added, %2$d updated, %3$d removed"
+msgstr "%1$d ajoutés, %2$d mis à jour, %3$d supprimés"
+
+#: src/Knowledge/Learner.php:53
+msgid "Tickets per run (0 = configuration value)"
+msgstr "Tickets par exécution (0 = valeur de la configuration)"
+
+#: src/Knowledge/Learner.php:72
+msgid "%1$d tickets distilled, %2$d embedded, %3$d errors, US$ %4$s"
+msgstr "%1$d tickets distillés, %2$d vectorisés, %3$d erreurs, US$ %4$s"
+
+#: src/Knowledge/Suggester.php:101
+msgid "Based on %d similar solved tickets."
+msgstr "D'après %d tickets résolus similaires."
+
+#: src/Knowledge/Suggester.php:102
+msgid "No similar solved ticket found."
+msgstr "Aucun ticket résolu similaire trouvé."
+
+#: src/Knowledge/Triage.php:167
+msgid "%1$d tickets classified, %2$d applied automatically"
+msgstr "%1$d tickets classés, %2$d appliqués automatiquement"
+
+#: src/KnowledgePage.php:107
+msgid "Fixing the category of these tickets improves the suggestions for the next ones."
+msgstr "Corriger la catégorie de ces tickets améliore les suggestions pour les suivants."
+
+#: src/KnowledgePage.php:121
+msgid "Right category (1st suggestion)"
+msgstr "Bonne catégorie (1re suggestion)"
+
+#: src/KnowledgePage.php:122
+msgid "Right category among the 3 first"
+msgstr "Bonne catégorie parmi les 3 premières"
+
+#: src/KnowledgePage.php:123
+msgid "Right type (incident / request)"
+msgstr "Bon type (incident / demande)"
+
+#: src/KnowledgePage.php:124
+msgid "Tickets with a suggestion"
+msgstr "Tickets avec une suggestion"
+
+#: src/KnowledgePage.php:131
+msgid "%1$d tickets, method: %2$s, %3$s s, on %4$s."
+msgstr "%1$d tickets, méthode : %2$s, %3$s s, le %4$s."
+
+#: src/KnowledgePage.php:139
+msgid "Accuracy by confidence"
+msgstr "Précision selon la confiance"
+
+#: src/KnowledgePage.php:140
+msgid "Use it to choose the threshold of the automatic application: pick a confidence level whose accuracy you accept."
+msgstr "Utilisez-la pour choisir le seuil de l'application automatique : retenez un niveau de confiance dont la précision vous convient."
+
+#: src/KnowledgePage.php:141
+msgid "Accuracy"
+msgstr "Précision"
+
+#: src/KnowledgePage.php:141
+#: src/TicketHooks.php:228
+msgid "Confidence"
+msgstr "Confiance"
+
+#: src/KnowledgePage.php:141
+#: src/KnowledgePage.php:151
+msgid "Tickets"
+msgstr "Tickets"
+
+#: src/KnowledgePage.php:149
+msgid "Per category"
+msgstr "Par catégorie"
+
+#: src/KnowledgePage.php:150
+#: src/Stats.php:377
+#: src/TicketHooks.php:226
+msgid "Category"
+msgstr "Catégorie"
+
+#: src/KnowledgePage.php:151
+msgid "Found"
+msgstr "Trouvés"
+
+#: src/KnowledgePage.php:160
+msgid "Most frequent confusions"
+msgstr "Confusions les plus fréquentes"
+
+#: src/KnowledgePage.php:161
+msgid "Categories often mistaken for one another may overlap in the category tree, or be used inconsistently."
+msgstr "Des catégories souvent confondues peuvent se chevaucher dans l'arborescence ou être utilisées de manière incohérente."
+
+#: src/KnowledgePage.php:169
+msgid "Solved tickets probably misclassified"
+msgstr "Tickets résolus probablement mal classés"
+
+#: src/KnowledgePage.php:34
+#: src/Stats.php:30
+msgid "Configuration"
+msgstr "Configuration"
+
+#: src/KnowledgePage.php:37
+msgid "Every solved or closed ticket with an accepted solution becomes a case: a reference for the analysis of new tickets and a labelled example (type and category) for their classification. No model is trained or fine-tuned: the assistant retrieves the closest cases and, optionally, lets the AI distill them into reusable records."
+msgstr "Chaque ticket résolu ou clos ayant une solution acceptée devient un cas : une référence pour l'analyse des nouveaux tickets et un exemple étiqueté (type et catégorie) pour leur classification. Aucun modèle n'est entraîné ni affiné (fine-tuning) : l'assistant retrouve les cas les plus proches et, en option, laisse l'IA les distiller en fiches réutilisables."
+
+#: src/KnowledgePage.php:41
+msgid "Cases in the library"
+msgstr "Cas dans la bibliothèque"
+
+#: src/KnowledgePage.php:42
+msgid "Distilled by the AI"
+msgstr "Distillés par l'IA"
+
+#: src/KnowledgePage.php:43
+msgid "Good references"
+msgstr "Bonnes références"
+
+#: src/KnowledgePage.php:44
+msgid "With embeddings"
+msgstr "Avec embeddings"
+
+#: src/KnowledgePage.php:54
+msgid "Last synchronization: %1$s · waiting for distillation: %2$d · errors: %3$d"
+msgstr "Dernière synchronisation : %1$s · en attente de distillation : %2$d · erreurs : %3$d"
+
+#: src/KnowledgePage.php:61
+msgid "Run now"
+msgstr "Exécuter maintenant"
+
+#: src/KnowledgePage.php:63
+msgid "Synchronize (new and changed tickets)"
+msgstr "Synchroniser (tickets nouveaux et modifiés)"
+
+#: src/KnowledgePage.php:64
+msgid "Read again every solved ticket? It can take a few minutes on large databases."
+msgstr "Relire tous les tickets résolus ? Cela peut prendre quelques minutes sur les grosses bases."
+
+#: src/KnowledgePage.php:64
+msgid "Rebuild everything"
+msgstr "Tout reconstruire"
+
+#: src/KnowledgePage.php:67
+msgid "Learn now (%d tickets)"
+msgstr "Apprendre maintenant (%d tickets)"
+
+#: src/KnowledgePage.php:69
+msgid "Enable the AI distillation or the embeddings in the configuration to use it."
+msgstr "Activez la distillation par l'IA ou les embeddings dans la configuration pour l'utiliser."
+
+#: src/KnowledgePage.php:75
+msgid "How well do solved tickets predict the category?"
+msgstr "Les tickets résolus prédisent-ils bien la catégorie ?"
+
+#: src/KnowledgePage.php:76
+msgid "Temporal evaluation: for each recent solved ticket, only older tickets are used to suggest its category, as it would have happened when it was opened. No AI call, no cost."
+msgstr "Évaluation temporelle : pour chaque ticket résolu récent, seuls les tickets plus anciens servent à suggérer sa catégorie, comme cela se serait passé à son ouverture. Aucun appel à l'IA, aucun coût."
+
+#: src/KnowledgePage.php:78
+msgid "Tickets evaluated"
+msgstr "Tickets évalués"
+
+#: src/KnowledgePage.php:80
+msgid "Use the embeddings"
+msgstr "Utiliser les embeddings"
+
+#: src/KnowledgePage.php:82
+msgid "Evaluate"
+msgstr "Évaluer"
+
+#: src/KnowledgePage.php:89
+msgid "No evaluation yet."
+msgstr "Aucune évaluation pour l'instant."
+
+#: src/KnowledgePage.php:96
+msgid "Solved tickets the AI would classify differently"
+msgstr "Tickets résolus que l'IA classerait autrement"
+
+#: src/KnowledgePage.php:97
+#: src/TicketHooks.php:191
+msgid "Ticket"
+msgstr "Ticket"
+
+#: src/KnowledgePage.php:98
+msgid "Category suggested by the AI"
+msgstr "Catégorie suggérée par l'IA"
+
+#: src/KnowledgePage.php:98
+msgid "Current category"
+msgstr "Catégorie actuelle"
+
+#: src/KnowledgePage.php:99
+#: src/TicketHooks.php:196
+msgid "Summary"
+msgstr "Résumé"
+
+#: src/Llm/LlmException.php:100
+msgid "The AI service is receiving too many requests right now. Try again in a moment."
+msgstr "Le service d'IA reçoit trop de requêtes en ce moment. Réessayez dans un instant."
+
+#: src/Llm/LlmException.php:102
+msgid "The AI service quota or credit is exhausted. Contact the administrator."
+msgstr "Le quota ou le crédit du service d'IA est épuisé. Contactez l'administrateur."
+
+#: src/Llm/LlmException.php:104
+msgid "The AI returned an invalid answer. Try generating it again."
+msgstr "L'IA a renvoyé une réponse invalide. Essayez de la générer à nouveau."
+
+#: src/Llm/LlmException.php:107
+msgid "The AI assistant is not correctly configured. Contact the administrator."
+msgstr "L'assistant IA n'est pas correctement configuré. Contactez l'administrateur."
+
+#: src/Llm/LlmException.php:109
+msgid "The AI service returned an error. If it persists, contact the administrator."
+msgstr "Le service d'IA a renvoyé une erreur. Si elle persiste, contactez l'administrateur."
+
+#: src/Llm/LlmException.php:90
+msgid "The content filter of the AI service blocked this request. Rephrase the text or proceed manually."
+msgstr "Le filtre de contenu du service d'IA a bloqué cette requête. Reformulez le texte ou poursuivez manuellement."
+
+#: src/Llm/LlmException.php:92
+msgid "The AI service took too long to answer. Try again in a moment."
+msgstr "Le service d'IA a mis trop de temps à répondre. Réessayez dans un instant."
+
+#: src/Llm/LlmException.php:94
+msgid "Could not connect to the AI service. Try again in a moment."
+msgstr "Impossible de joindre le service d'IA. Réessayez dans un instant."
+
+#: src/Llm/LlmException.php:96
+msgid "The AI service refused the credentials or the network access. Contact the administrator."
+msgstr "Le service d'IA a refusé les identifiants ou l'accès réseau. Contactez l'administrateur."
+
+#: src/Llm/LlmException.php:98
+msgid "The configured AI model or endpoint was not found. Contact the administrator."
+msgstr "Le modèle ou le point d'accès d'IA configuré est introuvable. Contactez l'administrateur."
+
+#: src/Llm/Providers.php:119
+msgid "Other OpenAI-compatible API"
+msgstr "Autre API compatible OpenAI"
+
+#: src/Llm/Providers.php:48
+msgid "deployment name"
+msgstr "nom du déploiement"
+
+#: src/Llm/Providers.php:50
+msgid "embeddings deployment name"
+msgstr "nom du déploiement d'embeddings"
+
+#: src/Llm/Providers.php:81
+msgid "local models"
+msgstr "modèles locaux"
+
+#: src/Log.php:236
+msgid "%1$d generated texts cleared, %2$d log rows deleted"
+msgstr "%1$d textes générés effacés, %2$d lignes du journal supprimées"
+
+#: src/Log.php:42
+msgid "AI assistant log"
+msgstr "Journal de l'assistant IA"
+
+#: src/Menu.php:23
+#: src/Menu.php:28
+#: src/Knowledge/CaseLibrary.php:45
+#: src/Knowledge/Learner.php:45
+#: src/Knowledge/Triage.php:42
+msgid "AI Ticket Assistant"
+msgstr "AI Ticket Assistant"
+
+#: src/Privacy.php:30
+msgid "Passwords, tokens and keys written as \"password: …\""
+msgstr "Mots de passe, jetons et clés écrits sous la forme « mot de passe : … »"
+
+#: src/Privacy.php:31
+msgid "E-mail addresses"
+msgstr "Adresses e-mail"
+
+#: src/Privacy.php:32
+msgid "Payment card numbers (Luhn check)"
+msgstr "Numéros de carte de paiement (contrôle de Luhn)"
+
+#: src/Privacy.php:33
+msgid "IBAN bank account numbers (checksum)"
+msgstr "Numéros de compte bancaire IBAN (clé de contrôle)"
+
+#: src/Privacy.php:34
+msgid "CNPJ — Brazilian company registry number"
+msgstr "CNPJ — numéro d'immatriculation des entreprises au Brésil"
+
+#: src/Privacy.php:35
+msgid "CPF — Brazilian individual taxpayer number"
+msgstr "CPF — numéro fiscal des particuliers au Brésil"
+
+#: src/Privacy.php:36
+msgid "Phone numbers"
+msgstr "Numéros de téléphone"
+
+#: src/Privacy.php:37
+msgid "IPv4 addresses"
+msgstr "Adresses IPv4"
+
+#: src/Profile.php:53
+msgid "Use the AI assistant on tickets (analyze, improve text, classify, write articles)"
+msgstr "Utiliser l'assistant IA sur les tickets (analyser, améliorer le texte, classer, rédiger des articles)"
+
+#: src/Prompt.php:54
+msgid "Same language as the ticket"
+msgstr "Même langue que le ticket"
+
+#: src/Stats.php:100
+msgid "Last 30 days"
+msgstr "30 derniers jours"
+
+#: src/Stats.php:107
+msgid "generations"
+msgstr "générations"
+
+#: src/Stats.php:108
+msgid "average %s s"
+msgstr "moyenne %s s"
+
+#: src/Stats.php:110
+msgid "%1$d blocked · %2$d errors"
+msgstr "%1$d blocages · %2$d erreurs"
+
+#: src/Stats.php:146
+msgid "Generations per day (14 days)"
+msgstr "Générations par jour (14 jours)"
+
+#: src/Stats.php:184
+msgid "Quality (30 days)"
+msgstr "Qualité (30 jours)"
+
+#: src/Stats.php:186
+msgid "Draft used"
+msgstr "Brouillon utilisé"
+
+#: src/Stats.php:186
+#: src/Stats.php:344
+msgid "Generations"
+msgstr "Générations"
+
+#: src/Stats.php:198
+msgid "Classification suggestions (90 days)"
+msgstr "Suggestions de classification (90 jours)"
+
+#: src/Stats.php:200
+msgid "No suggestion yet."
+msgstr "Aucune suggestion pour l'instant."
+
+#: src/Stats.php:203
+msgid "%1$d suggestions: %2$d applied by technicians, %3$d applied automatically, %4$d dismissed."
+msgstr "%1$d suggestions : %2$d appliquées par des techniciens, %3$d appliquées automatiquement, %4$d écartées."
+
+#: src/Stats.php:211
+msgid "Accuracy on solved tickets: %1$d%% (%2$d of %3$d kept the suggested category)."
+msgstr "Précision sur les tickets résolus : %1$d%% (%2$d sur %3$d ont gardé la catégorie suggérée)."
+
+#: src/Stats.php:231
+msgid "Classification applied"
+msgstr "Classification appliquée"
+
+#: src/Stats.php:232
+msgid "Article created"
+msgstr "Article créé"
+
+#: src/Stats.php:233
+msgid "Learning (distillation)"
+msgstr "Apprentissage (distillation)"
+
+#: src/Stats.php:234
+msgid "Embeddings"
+msgstr "Embeddings"
+
+#: src/Stats.php:235
+#: src/Knowledge/Triage.php:42
+msgid "Automatic triage"
+msgstr "Tri automatique"
+
+#: src/Stats.php:236
+msgid "Connection test"
+msgstr "Test de connexion"
+
+#: src/Stats.php:257
+msgid "Per action (30 days)"
+msgstr "Par action (30 jours)"
+
+#: src/Stats.php:259
+#: src/Stats.php:310
+#: src/Stats.php:344
+msgid "Cost"
+msgstr "Coût"
+
+#: src/Stats.php:27
+#: front/stats.php:20
+msgid "AI assistant — statistics"
+msgstr "Assistant IA — statistiques"
+
+#: src/Stats.php:279
+msgid "Per result (30 days)"
+msgstr "Par résultat (30 jours)"
+
+#: src/Stats.php:308
+msgid "Per model (30 days)"
+msgstr "Par modèle (30 jours)"
+
+#: src/Stats.php:310
+msgid "Calls"
+msgstr "Appels"
+
+#: src/Stats.php:310
+#: src/TicketHooks.php:246
+msgid "tokens"
+msgstr "jetons"
+
+#: src/Stats.php:342
+msgid "Most active technicians (30 days)"
+msgstr "Techniciens les plus actifs (30 jours)"
+
+#: src/Stats.php:343
+msgid "Technician"
+msgstr "Technicien"
+
+#: src/Stats.php:348
+#: src/TicketContext.php:472
+#: src/TicketContext.php:496
+msgid "User #%d"
+msgstr "Utilisateur #%d"
+
+#: src/Stats.php:376
+msgid "Most analyzed categories (30 days)"
+msgstr "Catégories les plus analysées (30 jours)"
+
+#: src/Stats.php:378
+msgid "Analyses"
+msgstr "Analyses"
+
+#: src/Stats.php:382
+msgid "(no category)"
+msgstr "(sans catégorie)"
+
+#: src/Stats.php:386
+msgid "No analysis in the period."
+msgstr "Aucune analyse sur la période."
+
+#: src/Stats.php:98
+msgid "Today"
+msgstr "Aujourd'hui"
+
+#: src/Stats.php:99
+msgid "Last 7 days"
+msgstr "7 derniers jours"
+
+#: src/TicketHooks.php:128
+msgid "More formal"
+msgstr "Plus formel"
+
+#: src/TicketHooks.php:129
+msgid "Friendlier"
+msgstr "Plus chaleureux"
+
+#: src/TicketHooks.php:130
+msgid "Shorter"
+msgstr "Plus court"
+
+#: src/TicketHooks.php:131
+msgid "Fix spelling and grammar only"
+msgstr "Corriger seulement l'orthographe et la grammaire"
+
+#: src/TicketHooks.php:132
+msgid "Translate to the requester's language"
+msgstr "Traduire dans la langue du demandeur"
+
+#: src/TicketHooks.php:139
+#: src/TicketHooks.php:240
+msgid "Improving…"
+msgstr "Amélioration…"
+
+#: src/TicketHooks.php:140
+#: src/TicketHooks.php:241
+msgid "Text rewritten: review it before sending (Ctrl+Z undoes it)."
+msgstr "Texte réécrit : relisez-le avant de l'envoyer (Ctrl+Z annule)."
+
+#: src/TicketHooks.php:142
+#: src/TicketHooks.php:218
+msgid "The editor could not be found. Use \"Copy\" and paste the text manually."
+msgstr "L'éditeur est introuvable. Utilisez « Copier » et collez le texte manuellement."
+
+#: src/TicketHooks.php:146
+msgid "Rewrite the draft following the communication standard of the team (AI)"
+msgstr "Réécrire le brouillon selon la charte de communication de l'équipe (IA)"
+
+#: src/TicketHooks.php:147
+msgid "Improve my text (AI)"
+msgstr "Améliorer mon texte (IA)"
+
+#: src/TicketHooks.php:149
+msgid "More options"
+msgstr "Plus d'options"
+
+#: src/TicketHooks.php:192
+msgid "Analysis"
+msgstr "Analyse"
+
+#: src/TicketHooks.php:193
+msgid "Reply to the requester"
+msgstr "Réponse au demandeur"
+
+#: src/TicketHooks.php:195
+msgid "Knowledge base"
+msgstr "Base de connaissances"
+
+#: src/TicketHooks.php:197
+msgid "Technical strategy"
+msgstr "Stratégie technique"
+
+#: src/TicketHooks.php:198
+msgid "Information still needed"
+msgstr "Informations encore nécessaires"
+
+#: src/TicketHooks.php:199
+msgid "Similar solved tickets used as references"
+msgstr "Tickets résolus similaires utilisés comme références"
+
+#: src/TicketHooks.php:200
+msgid "same category"
+msgstr "même catégorie"
+
+#: src/TicketHooks.php:201
+msgid "Internal guidance for the technician: it is never sent to the requester."
+msgstr "Consigne interne pour le technicien : elle n'est jamais envoyée au demandeur."
+
+#: src/TicketHooks.php:202
+msgid "Draft: review it before sending it to the requester."
+msgstr "Brouillon : relisez-le avant de l'envoyer au demandeur."
+
+#: src/TicketHooks.php:203
+msgid "Reading the ticket, its history and its attachments…"
+msgstr "Lecture du ticket, de son historique et de ses pièces jointes…"
+
+#: src/TicketHooks.php:204
+msgid "This can take up to a minute."
+msgstr "Cela peut prendre jusqu'à une minute."
+
+#: src/TicketHooks.php:205
+msgid "Comparing with solved tickets…"
+msgstr "Comparaison avec les tickets résolus…"
+
+#: src/TicketHooks.php:206
+msgid "Writing the article…"
+msgstr "Rédaction de l'article…"
+
+#: src/TicketHooks.php:208
+msgid "Suggest a classification"
+msgstr "Suggérer une classification"
+
+#: src/TicketHooks.php:209
+msgid "Write a knowledge base article"
+msgstr "Rédiger un article de la base de connaissances"
+
+#: src/TicketHooks.php:210
+msgid "Generate again"
+msgstr "Générer à nouveau"
+
+#: src/TicketHooks.php:211
+msgid "Try again"
+msgstr "Réessayer"
+
+#: src/TicketHooks.php:212
+msgid "Copy"
+msgstr "Copier"
+
+#: src/TicketHooks.php:213
+msgid "Copied!"
+msgstr "Copié !"
+
+#: src/TicketHooks.php:214
+msgid "Insert as followup"
+msgstr "Insérer comme suivi"
+
+#: src/TicketHooks.php:215
+msgid "Insert as solution"
+msgstr "Insérer comme solution"
+
+#: src/TicketHooks.php:216
+msgid "Draft inserted in the editor: review it before sending."
+msgstr "Brouillon inséré dans l'éditeur : relisez-le avant de l'envoyer."
+
+#: src/TicketHooks.php:217
+msgid "The editor already contains text. Replace it with the AI draft? (Ctrl+Z undoes it)"
+msgstr "L'éditeur contient déjà du texte. Le remplacer par le brouillon de l'IA ? (Ctrl+Z annule)"
+
+#: src/TicketHooks.php:219
+msgid "Useful"
+msgstr "Utile"
+
+#: src/TicketHooks.php:220
+msgid "Not useful"
+msgstr "Pas utile"
+
+#: src/TicketHooks.php:221
+msgid "Thank you for the feedback."
+msgstr "Merci pour votre retour."
+
+#: src/TicketHooks.php:222
+msgid "Analysis generated on %1$s by %2$s, the ticket has not changed since then."
+msgstr "Analyse générée le %1$s par %2$s ; le ticket n'a pas changé depuis."
+
+#: src/TicketHooks.php:223
+msgid "Current"
+msgstr "Actuel"
+
+#: src/TicketHooks.php:224
+msgid "Suggested"
+msgstr "Suggéré"
+
+#: src/TicketHooks.php:225
+msgid "Type"
+msgstr "Type"
+
+#: src/TicketHooks.php:227
+msgid "Urgency"
+msgstr "Urgence"
+
+#: src/TicketHooks.php:229
+msgid "Other candidates"
+msgstr "Autres candidates"
+
+#: src/TicketHooks.php:230
+msgid "Apply to the ticket"
+msgstr "Appliquer au ticket"
+
+#: src/TicketHooks.php:231
+msgid "Apply the type"
+msgstr "Appliquer le type"
+
+#: src/TicketHooks.php:232
+msgid "Apply the category"
+msgstr "Appliquer la catégorie"
+
+#: src/TicketHooks.php:233
+msgid "Dismiss"
+msgstr "Écarter"
+
+#: src/TicketHooks.php:234
+msgid "Based on similar solved tickets"
+msgstr "D'après les tickets résolus similaires"
+
+#: src/TicketHooks.php:235
+msgid "Chosen by the AI among the categories of similar solved tickets"
+msgstr "Choisie par l'IA parmi les catégories des tickets résolus similaires"
+
+#: src/TicketHooks.php:236
+msgid "No suggestion: the library of solved tickets has no similar case yet."
+msgstr "Pas de suggestion : la bibliothèque des tickets résolus n'a pas encore de cas similaire."
+
+#: src/TicketHooks.php:237
+msgid "Create a draft article"
+msgstr "Créer un brouillon d'article"
+
+#: src/TicketHooks.php:238
+msgid "The article is created unpublished: review it and choose its audience in the knowledge base."
+msgstr "L'article est créé non publié : relisez-le et choisissez sa cible dans la base de connaissances."
+
+#: src/TicketHooks.php:239
+msgid "Open the article"
+msgstr "Ouvrir l'article"
+
+#: src/TicketHooks.php:243
+msgid "The assistant could not be reached (HTTP %s)."
+msgstr "Impossible de joindre l'assistant (HTTP %s)."
+
+#: src/TicketHooks.php:244
+#: ajax/assistant.php:41
+msgid "You are not allowed to use the assistant."
+msgstr "Vous n'êtes pas autorisé à utiliser l'assistant."
+
+#: src/TicketHooks.php:245
+msgid "Unknown error."
+msgstr "Erreur inconnue."
+
+#: src/TicketHooks.php:247
+msgid "image"
+msgstr "image"
+
+#: src/TicketHooks.php:248
+msgid "images"
+msgstr "images"
+
+#: src/TicketHooks.php:249
+msgid "document"
+msgstr "document"
+
+#: src/TicketHooks.php:250
+msgid "documents"
+msgstr "documents"
+
+#: src/TicketHooks.php:83
+msgid "Read the ticket (text, images and documents) and suggest a strategy, a reply and a classification"
+msgstr "Lire le ticket (texte, images et documents) et suggérer une stratégie, une réponse et une classification"
+
+#: src/TicketHooks.php:87
+msgid "A classification was suggested for this ticket"
+msgstr "Une classification a été suggérée pour ce ticket"
+
+#: src/TicketHooks.php:88
+msgid "Suggested category (%d%%)"
+msgstr "Catégorie suggérée (%d%%)"
+

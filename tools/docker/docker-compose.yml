@@ -1,0 +1,103 @@
+# Development and test environment: GLPI 10, 11 and 12 with the plugin
+# mounted from this repository, and a mock AI provider (no key, no cost).
+#
+#   python tools/mock-llm/server.py --port 8099      # on the host, first
+#
+#   # one GLPI version at a time (lighter), or all of them:
+#   docker compose -f tools/docker/docker-compose.yml --profile glpi11 up -d
+#   docker compose -f tools/docker/docker-compose.yml --profile all up -d
+#   docker compose -f tools/docker/docker-compose.yml --profile all stop
+#
+#   GLPI 10.0 -> http://localhost:8010   GLPI 11.0 -> http://localhost:8011
+#   GLPI 12.0 -> http://localhost:8012   (default GLPI accounts: glpi / glpi)
+#
+# In the plugin configuration use the provider "Other OpenAI-compatible API"
+# with the address http://host.docker.internal:8099/v1 and any model name.
+#
+# Containers are not restarted automatically (after a reboot, start them
+# again) and their memory is capped, so the environment stays light on a
+# laptop. Passwords below are for this throwaway local environment only.
+
+name: ticketassistant-dev
+
+x-glpi: &glpi
+  depends_on:
+    db:
+      condition: service_healthy
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  restart: "no"
+  mem_limit: 768m
+
+services:
+  db:
+    image: mariadb:10.11
+    environment:
+      MARIADB_ROOT_PASSWORD: root-dev-only
+      MARIADB_USER: glpi
+      MARIADB_PASSWORD: glpi-dev-only
+      MARIADB_DATABASE: glpi10
+    volumes:
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    restart: "no"
+    mem_limit: 512m
+
+  glpi10:
+    <<: *glpi
+    profiles: ["glpi10", "all"]
+    image: glpi/glpi:10.0.28
+    environment:
+      GLPI_DB_HOST: db
+      GLPI_DB_PORT: "3306"
+      GLPI_DB_NAME: glpi10
+      GLPI_DB_USER: glpi
+      GLPI_DB_PASSWORD: glpi-dev-only
+    ports:
+      - "8010:80"
+    volumes:
+      - ../..:/var/www/glpi/plugins/ticketassistant
+      - glpi10-data:/var/glpi
+
+  glpi11:
+    <<: *glpi
+    profiles: ["glpi11", "all"]
+    image: glpi/glpi:11.0.11
+    environment:
+      GLPI_DB_HOST: db
+      GLPI_DB_PORT: "3306"
+      GLPI_DB_NAME: glpi11
+      GLPI_DB_USER: glpi
+      GLPI_DB_PASSWORD: glpi-dev-only
+    ports:
+      - "8011:80"
+    volumes:
+      - ../..:/var/www/glpi/plugins/ticketassistant
+      - glpi11-data:/var/glpi
+
+  glpi12:
+    <<: *glpi
+    profiles: ["glpi12", "all"]
+    image: glpi/glpi:12.0.0
+    environment:
+      GLPI_DB_HOST: db
+      GLPI_DB_PORT: "3306"
+      GLPI_DB_NAME: glpi12
+      GLPI_DB_USER: glpi
+      GLPI_DB_PASSWORD: glpi-dev-only
+    ports:
+      - "8012:80"
+    volumes:
+      - ../..:/var/www/glpi/plugins/ticketassistant
+      - glpi12-data:/var/glpi
+
+volumes:
+  db-data:
+  glpi10-data:
+  glpi11-data:
+  glpi12-data:

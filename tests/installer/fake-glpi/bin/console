@@ -1,0 +1,159 @@
+<?php
+
+/**
+ * Fake GLPI console for the installer tests (tests/installer): no database,
+ * the state lives in files/state.json and every call is recorded, so that a
+ * test can check what the installer did. An argument containing an API key
+ * is recorded as ***LEAK***: keys must only travel through the standard input.
+ */
+
+$root  = dirname(__DIR__);
+$file  = $root . '/files/state.json';
+$state = is_file($file) ? json_decode((string) file_get_contents($file), true) : [
+    'installed' => false,
+    'active'    => false,
+    'synced'    => false,
+    'key'       => '',
+    'config'    => ['provider' => 'openai', 'base_url' => '', 'model' => '', 'enabled' => 0],
+    'calls'     => [],
+];
+
+$args = array_slice($argv, 1);
+$state['calls'][] = implode(' ', array_map(static function ($arg) {
+    return preg_match('/sk-|key=/', $arg) ? '***LEAK***' : $arg;
+}, $args));
+
+$finish = static function (int $code, string $message = '') use (&$state, $file): void {
+    if ($message !== '') {
+        echo $message, "\n";
+    }
+    file_put_contents($file, json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    exit($code);
+};
+
+// Global options of the real console
+$args    = array_values(array_filter($args, static function ($arg) {
+    return !in_array($arg, ['--no-interaction', '--no-ansi', '--allow-superuser', '-n'], true) && strpos($arg, '--lang=') !== 0;
+}));
+$command = $args[0] ?? '';
+$options = [];
+foreach (array_slice($args, 1) as $arg) {
+    if (strpos($arg, '--') !== 0) {
+        continue;
+    }
+    $parts = explode('=', substr($arg, 2), 2);
+    if ($parts[0] === 'set') {
+        $options['set'][] = $parts[1] ?? '';
+    } else {
+        $options[$parts[0]] = $parts[1] ?? true;
+    }
+}
+
+switch ($command) {
+    case '--version':
+        $finish(0, 'GLPI CLI 11.0.11');
+        // no break
+    case '--help':
+        $finish(0, 'Usage: command [options] [arguments]');
+        // no break
+    case 'plugin:install':
+        if (($options['username'] ?? '') !== 'glpi') {
+            $finish(1, 'User "' . ($options['username'] ?? '') . '" not found.');
+        }
+        if (!is_file($root . '/plugins/ticketassistant/setup.php')) {
+            $finish(1, 'Plugin "ticketassistant" not found.');
+        }
+        $state['installed'] = true;
+        $state['active']    = false;
+        $finish(0, 'Plugin "ticketassistant" has been installed and can be activated.');
+        // no break
+    case 'plugin:activate':
+        if (!$state['installed']) {
+            $finish(1, 'Plugin "ticketassistant" is not installed.');
+        }
+        $state['active'] = true;
+        $finish(0, 'Plugin "ticketassistant" has been activated.');
+        // no break
+    case 'plugin:deactivate':
+        $state['active'] = false;
+        $finish(0, 'Plugin "ticketassistant" has been deactivated.');
+        // no break
+    case 'plugin:uninstall':
+        $state['installed'] = false;
+        $state['active']    = false;
+        $finish(0, 'Plugin "ticketassistant" has been uninstalled.');
+}
+
+if (strpos($command, 'plugins:ticketassistant:') === 0 && !$state['active']) {
+    $finish(1, 'Command "' . $command . '" is not defined.');
+}
+
+$config = &$state['config'];
+switch ($command) {
+    case 'plugins:ticketassistant:status':
+        $ready = $config['enabled'] && $config['model'] !== ''
+            && ($state['key'] !== '' || in_array($config['provider'], ['ollama', 'compatible'], true));
+        $values = [
+            'version'      => '1.0.0',
+            'glpi_version' => '11.0.11',
+            'enabled'      => $config['enabled'] ? '1' : '0',
+            'ready'        => $ready ? '1' : '0',
+            'provider'     => $config['provider'],
+            'base_url'     => $config['base_url'] !== '' ? $config['base_url'] : 'https://api.openai.com/v1',
+            'model'        => $config['model'],
+            'api_key'      => $state['key'] !== '' ? '1' : '0',
+            'cases'        => $state['synced'] ? '40' : '0',
+            'cron_aisync'  => 'enabled,cli,',
+        ];
+        foreach ($values as $key => $value) {
+            echo isset($options['porcelain']) ? "$key=$value\n" : "$key: $value\n";
+        }
+        $finish(0);
+        // no break
+    case 'plugins:ticketassistant:configure':
+        foreach (['provider' => 'provider', 'base-url' => 'base_url', 'model' => 'model', 'api-version' => 'api_version'] as $option => $key) {
+            if (array_key_exists($option, $options)) {
+                $config[$key] = $options[$option] === true ? '' : $options[$option];
+            }
+        }
+        if (isset($options['api-key-stdin'])) {
+            $line = trim((string) fgets(STDIN));
+            if ($line === '') {
+                $finish(2, 'No API key received on the standard input.');
+            }
+            $state['key'] = $line; // stored as received: a byte order mark would show up
+        }
+        if (isset($options['clear-api-key'])) {
+            $state['key'] = '';
+        }
+        if (isset($options['enable'])) {
+            $config['enabled'] = 1;
+        }
+        if (isset($options['disable'])) {
+            $config['enabled'] = 0;
+        }
+        foreach ($options['set'] ?? [] as $pair) {
+            [$key, $value] = array_pad(explode('=', $pair, 2), 2, '');
+            $config[$key] = $value;
+        }
+        echo "Configuration saved.\n";
+        if (isset($options['list-models'])) {
+            echo "gpt-5-mini\ngpt-5.4\ngpt-4.1-mini\ntext-embedding-3-small\n";
+        }
+        if (isset($options['test'])) {
+            if ($state['key'] === '' && !in_array($config['provider'], ['ollama', 'compatible'], true)) {
+                $finish(1, 'Authentication failed: check the API key.');
+            }
+            echo 'Connection OK — ', $config['model'], " answered in 812 ms (21 tokens, US$ 0.0001).\n";
+        }
+        $finish(0);
+        // no break
+    case 'plugins:ticketassistant:sync':
+        $state['synced'] = true;
+        $finish(0, '40 added, 0 updated, 0 unchanged, 0 removed in 0.2 s');
+        // no break
+    case 'plugins:ticketassistant:demo':
+        $finish(0, 'Demonstration data created.');
+}
+
+$finish(1, 'Command "' . $command . '" is not defined.');

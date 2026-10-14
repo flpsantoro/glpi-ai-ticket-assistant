@@ -1,0 +1,17 @@
+# Text files always with LF line endings
+* text=auto eol=lf
+*.mo binary
+*.png binary
+*.jpg binary
+
+# Not part of the release archive (git archive / GitHub release):
+#   git archive --prefix=ticketassistant/ -o ticketassistant-1.0.0.tar.gz HEAD
+.gitattributes     export-ignore
+.gitignore         export-ignore
+.github/           export-ignore
+docs/              export-ignore
+tests/             export-ignore
+tools/             export-ignore
+composer.json      export-ignore
+phpunit.xml.dist   export-ignore
+CONTRIBUTING.md    export-ignore

@@ -1,0 +1,45 @@
+# ---------------------------------------------------------------------------
+# Secrets and environment configuration — NEVER commit them.
+# API keys live encrypted in the GLPI database, never in files.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+*.key
+*.pem
+*.pfx
+*.p12
+config_db.php
+glpicrypt.key
+secrets.*
+credentials.*
+
+# Database dumps (they contain ticket texts)
+*.sql.gz
+*.dump
+dump*.sql
+backup*.sql
+
+# Development tooling
+/vendor/
+/node_modules/
+/build/
+/dist/
+.phpunit.result.cache
+.phpunit.cache/
+composer.lock
+tools/mock-llm/*.jsonl
+
+# Backups, editors, OS
+*.bak
+*.orig
+*.old
+*~
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Python caches of the tools
+__pycache__/
+*.pyc

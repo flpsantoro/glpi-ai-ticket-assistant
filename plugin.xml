@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <name>GLPI AI Ticket Assistant</name>
+    <key>ticketassistant</key>
+    <state>stable</state>
+    <logo>https://raw.githubusercontent.com/flpsantoro/glpi-ai-ticket-assistant/main/docs/images/logo.png</logo>
+    <description>
+        <short>
+            <en>AI assistant for tickets: analysis of the whole ticket (images and documents included), reply drafts, text rewriting, classification learned from solved tickets and knowledge base articles. OpenAI, Azure OpenAI, Anthropic, Gemini, Ollama and any OpenAI-compatible API.</en>
+            <pt>Assistente de IA para chamados: análise do chamado inteiro (inclusive imagens e documentos), rascunhos de resposta, reescrita de texto, classificação aprendida com os chamados resolvidos e artigos da base de conhecimento. OpenAI, Azure OpenAI, Anthropic, Gemini, Ollama e qualquer API compatível com OpenAI.</pt>
+            <es>Asistente de IA para tickets: análisis del ticket completo (imágenes y documentos incluidos), borradores de respuesta, reescritura de texto, clasificación aprendida de los tickets resueltos y artículos de la base de conocimiento. OpenAI, Azure OpenAI, Anthropic, Gemini, Ollama y cualquier API compatible con OpenAI.</es>
+            <fr>Assistant IA pour les tickets : analyse du ticket complet (images et documents compris), brouillons de réponse, réécriture de texte, classification apprise des tickets résolus et articles de la base de connaissances. OpenAI, Azure OpenAI, Anthropic, Gemini, Ollama et toute API compatible OpenAI.</fr>
+        </short>
+        <long>
+            <en>The assistant reads the whole ticket — description, history, tasks, solutions, screenshots and attached documents (PDF, Office, logs) — and gives the technician a summary, a technical strategy and a reply draft in the communication standard of the team. It rewrites drafts in six modes, suggests the type, category and urgency of tickets from the solved ones (with a measurable accuracy), can triage new tickets automatically and drafts knowledge base articles. Human in the loop: nothing is sent to the requester without the technician. Cost guard rails, audit log, statistics, personal data masking and per-category instructions are included. One code base for GLPI 10.0.11+, 11 and 12.</en>
+            <pt>O assistente lê o chamado inteiro — descrição, histórico, tarefas, soluções, prints e documentos anexados (PDF, Office, logs) — e entrega ao técnico um resumo, uma estratégia técnica e um rascunho de resposta no padrão de comunicação da equipe. Reescreve rascunhos em seis modos, sugere tipo, categoria e urgência com base nos chamados resolvidos (com taxa de acerto mensurável), pode fazer a triagem automática dos novos chamados e redige artigos da base de conhecimento. Humano no controle: nada é enviado ao solicitante sem o técnico. Inclui controle de custos, log de auditoria, estatísticas, mascaramento de dados pessoais e instruções por categoria. Um único código para GLPI 10.0.11+, 11 e 12.</pt>
+        </long>
+    </description>
+    <homepage>https://github.com/flpsantoro/glpi-ai-ticket-assistant</homepage>
+    <download>https://github.com/flpsantoro/glpi-ai-ticket-assistant/releases</download>
+    <issues>https://github.com/flpsantoro/glpi-ai-ticket-assistant/issues</issues>
+    <readme>https://github.com/flpsantoro/glpi-ai-ticket-assistant/blob/main/README.md</readme>
+    <authors>
+        <author>Felipe Santoro Alcantara</author>
+    </authors>
+    <versions>
+        <version>
+            <num>1.0.0</num>
+            <compatibility>~10.0</compatibility>
+            <compatibility>~11.0</compatibility>
+            <compatibility>~12.0</compatibility>
+            <download_url>https://github.com/flpsantoro/glpi-ai-ticket-assistant/releases/download/v1.0.0/ticketassistant-1.0.0.tar.bz2</download_url>
+        </version>
+    </versions>
+    <langs>
+        <lang>en_GB</lang>
+        <lang>pt_BR</lang>
+        <lang>es_ES</lang>
+        <lang>fr_FR</lang>
+    </langs>
+    <license>GPL v2+</license>
+    <tags>
+        <en>
+            <tag>AI</tag>
+            <tag>LLM</tag>
+            <tag>Ticket</tag>
+            <tag>Helpdesk</tag>
+            <tag>Classification</tag>
+            <tag>Knowledge base</tag>
+        </en>
+        <pt>
+            <tag>IA</tag>
+            <tag>Chamados</tag>
+            <tag>Central de serviços</tag>
+            <tag>Classificação</tag>
+        </pt>
+    </tags>
+</root>

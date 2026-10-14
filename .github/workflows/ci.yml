@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: PHP ${{ matrix.php }} syntax
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # GLPI 10.0 runs on PHP 7.4 to 8.5, GLPI 11 on 8.2+, GLPI 12 on 8.3+
+        php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - name: Lint every PHP file
+        run: find . -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 -P4 php -l | (! grep -v '^No syntax errors')
+
+  unit:
+    name: Unit tests (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, json, gd, zip
+          coverage: none
+      - run: composer install --no-interaction --no-progress
+      - run: vendor/bin/phpunit
+
+  installers:
+    name: Installers (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: install.sh (bash)
+        if: runner.os == 'Linux'
+        run: |
+          bash -n install.sh
+          bash tests/installer/installer-test.sh "$(command -v php)"
+      - name: install.ps1 (Windows PowerShell 5.1)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: .\tests\installer\installer-test.ps1 -PhpExe (Get-Command php).Source
+      - name: install.ps1 (PowerShell 7)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: .\tests\installer\installer-test.ps1 -PhpExe (Get-Command php).Source
+
+  assets:
+    name: JavaScript and translations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: JavaScript syntax
+        run: for file in public/js/*.js; do node --check "$file"; done
+      - name: Translation template is up to date
+        run: |
+          python tools/i18n/i18n.py extract
+          git diff --ignore-matching-lines='POT-Creation-Date' --exit-code locales/ticketassistant.pot
+      - name: Translations are complete and compiled
+        run: |
+          python tools/i18n/i18n.py check
+          python tools/i18n/i18n.py compile
+          git diff --exit-code locales/*.mo
