@@ -93,8 +93,8 @@ chamados que parecem mal classificados. Detalhes em
 O instalador encontra as instalações do GLPI da máquina e dos seus contêineres (Docker, Podman),
 escolhe um PHP compatível e o usuário do servidor web, copia o plugin, instala e habilita, conecta
 o provedor de IA (menu de provedores, lista dos modelos, teste de conexão), monta a biblioteca de
-chamados resolvidos e verifica o cron e as ferramentas de PDF. Setas e Enter, em português ou
-inglês; pergunta antes de mudar qualquer coisa.
+chamados resolvidos e verifica o cron e as ferramentas de PDF. Setas e Enter, em português, inglês
+ou francês; pergunta antes de mudar qualquer coisa.
 
 **Linux**
 

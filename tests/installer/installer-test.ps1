@@ -54,6 +54,15 @@ try {
     Check 'in place: no copy onto itself' 1 @($output | Where-Object { $_ -match 'arquivos do plugin' }).Count
     Check 'in place: console messages in Portuguese' $true (@((Get-FakeState).calls | Where-Object { $_ -match 'lang=pt_BR' }).Count -gt 0)
 
+    # --- French -------------------------------------------------------------------
+    $output = & $TestShell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $plugin 'install.ps1') -Yes -Lang fr -GlpiPath $TestGlpi -Php $TestPhp `
+        -SkipAi -Sync no -Cron no 2>&1 | ForEach-Object { "$_" }
+    Check 'french: exit code' 0 $LASTEXITCODE
+    Check 'french: console messages in French' $true (@((Get-FakeState).calls | Where-Object { $_ -match 'lang=fr_FR' }).Count -gt 0)
+    # "Prochaines etapes" with its accent, which the code page of the console may turn into two characters
+    Check 'french: messages of the installer' 1 @($output | Where-Object { $_ -match 'Prochaines .{1,2}tapes' }).Count
+    Check 'french: no language question in unattended mode' 0 @($output | Where-Object { $_ -match 'Langue' }).Count
+
     # --- GLPI in a container: a fake docker (fake-docker\docker.php) plays a container
     # "glpi-app" whose files are in $TestContainer, and a "db" container without PHP
     $TestContainer = Join-Path $TestWork 'container'
@@ -176,6 +185,9 @@ try {
     Press 'sk-' Backspace '12' Enter; Check 'secret: backspace' 'sk12' (Read-Secret 'key')
     Press Enter; Check 'text: default kept' 'glpi' (Read-Text 'login' 'glpi')
     Press Backspace Backspace Backspace Backspace 'admin' Enter; Check 'text: default replaced' 'admin' (Read-Text 'login' 'glpi')
+    $Lang = ''; $script:UiLang = 'en'; Press DownArrow DownArrow Enter; Select-Language; Check 'language: third choice is French' 'fr' $script:UiLang
+    $Lang = ''; $script:UiLang = 'pt'; Press Enter; Select-Language; Check 'language: the detected one is the default' 'pt' $script:UiLang
+    $Lang = 'en'; $script:UiLang = 'en'; Select-Language; Check 'language: -Lang skips the question' 'en' $script:UiLang
 
     # Interactive AI configuration: configure now? (Enter = yes) - Anthropic (2 downs) - key typed
     # - model filter "5.4" - personalize? y - organization - English (2 downs) - costs? Enter = no

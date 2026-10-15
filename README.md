@@ -105,8 +105,8 @@ poppler-utils or a provider that reads PDF files natively (OpenAI, Anthropic).
 The installer finds the GLPI installations of the machine and of its containers (Docker,
 Podman), picks a compatible PHP and the web server user, copies the plugin, installs and enables
 it, connects the AI provider (menu of providers, list of the models, connection test), builds the
-library of solved tickets and checks the cron and the PDF tools. Arrow keys and Enter, in English
-or Portuguese; it asks before changing anything.
+library of solved tickets and checks the cron and the PDF tools. Arrow keys and Enter, in English,
+Portuguese or French; it asks before changing anything.
 
 **Linux**
 

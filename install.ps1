@@ -50,7 +50,7 @@ param(
     [switch]$Status,
     [switch]$Configure,
     [switch]$Uninstall,
-    [ValidateSet('', 'en', 'pt')][string]$Lang = '',
+    [ValidateSet('', 'en', 'pt', 'fr')][string]$Lang = '',
     [switch]$Yes,
     [switch]$NoColor,
     [switch]$Help
@@ -96,7 +96,7 @@ $ProviderModels = @{
 }
 
 # -----------------------------------------------------------------------------
-# Messages (English, Brazilian Portuguese)
+# Messages (English, Brazilian Portuguese, French)
 # -----------------------------------------------------------------------------
 $MsgEn = @{
     subtitle         = 'Installer for Windows'
@@ -448,13 +448,189 @@ $MsgPt = @{
     yes              = 'Sim'
     no               = 'Não'
 }
+$MsgFr = @{
+    subtitle         = 'Installateur pour Windows'
+    step_checks      = 'Vérification du système'
+    step_glpi        = 'Recherche de GLPI'
+    step_plugin      = 'Installation du plugin'
+    step_ai          = "Connexion de l'IA"
+    step_library     = 'Apprentissage des tickets résolus'
+    step_extras      = 'Actions automatiques et outils PDF'
+    not_repo         = 'Lancez ce script depuis le dépôt cloné (setup.php du plugin introuvable à côté).'
+    not_admin        = 'Pas lancé en administrateur : écrire dans des dossiers comme C:\inetpub ou Program Files et créer la tâche planifiée du cron le demandent.'
+    elevate          = "Relancer l'installateur en administrateur ?"
+    php_missing      = 'PHP introuvable. Installez-le (XAMPP, WAMP, Laragon, windows.php.net) ou utilisez -Php C:\chemin\php.exe.'
+    ext_ok           = 'Extensions PHP : {0}'
+    ext_missing      = 'Extensions PHP manquantes en ligne de commande : {0}'
+    ext_hint         = 'Activez-les aussi dans le php.ini utilisé par le serveur web (extension=curl, mbstring, gd, zip) et redémarrez-le.'
+    plugin_repo      = 'Plugin {0} depuis {1}'
+    searching        = 'Recherche des installations de GLPI'
+    found_n          = '{0} installation(s) de GLPI trouvée(s)'
+    none_found       = 'Aucune installation de GLPI trouvée automatiquement.'
+    choose_glpi      = 'Quel GLPI doit recevoir le plugin ?'
+    other_path       = "Un autre dossier…`tsaisir le chemin de GLPI"
+    type_path        = 'Dossier de GLPI (celui qui contient bin\console)'
+    not_glpi         = "{0} n'est pas un dossier GLPI (bin\console et src\Ticket.php introuvables)."
+    glpi_too_old     = "GLPI {0} n'est pas pris en charge : le plugin demande GLPI {1} ou plus récent."
+    glpi_untested    = "GLPI {0} est plus récent que les versions testées (jusqu'à {1}) : il peut fonctionner, signalez tout problème."
+    plugin_none      = 'plugin non installé'
+    plugin_link      = 'plugin lié à {0}'
+    php_too_old      = 'GLPI {0} demande PHP {1} ou plus récent, mais {2} est PHP {3}.'
+    choose_php       = 'Quel PHP doit lancer la console GLPI ?'
+    plugins_not_writable = "Impossible d'écrire dans {0}."
+    menu_title       = 'Le plugin {0} est déjà dans ce GLPI. Que voulez-vous faire ?'
+    m_update         = "Mettre à jour vers la version {0}`tcopie les fichiers et lance les migrations"
+    m_reinstall      = "Réinstaller la version {0}`tcopie à nouveau les fichiers, garde les données"
+    m_configure      = "Configurer le fournisseur d'IA`tfournisseur, modèle, clé, test de connexion"
+    m_status         = "État et test de connexion`tconnexion, bibliothèque, actions automatiques"
+    m_sync           = "Synchroniser la bibliothèque des tickets résolus`tsans appel à l'IA, sans coût"
+    m_uninstall      = "Désinstaller`tretire le plugin, ses données et sa configuration"
+    m_exit           = 'Quitter'
+    mode_ask         = 'Comment placer le plugin dans GLPI ?'
+    mode_copy        = "Copier les fichiers`trecommandé en production"
+    mode_link        = "Lier à ce dépôt`tdéveloppement : un git pull met GLPI à jour (jonction)"
+    in_place         = 'Les fichiers du plugin sont déjà dans {0}'
+    backing_up       = 'Sauvegarde de la version précédente'
+    backup_done      = 'Version précédente sauvegardée dans {0}'
+    copying          = 'Copie du plugin vers {0}'
+    linking          = 'Liaison de {0} au dépôt'
+    login_ask        = "Identifiant d'un super-administrateur GLPI (utilisé pendant l'installation)"
+    installing       = 'Installation dans GLPI (tables, droits, actions automatiques)'
+    activating       = 'Activation du plugin'
+    verifying        = 'Vérification que GLPI a chargé le plugin'
+    console_error    = 'La console GLPI a signalé une erreur'
+    retry_login      = 'Réessayer avec un autre identifiant ?'
+    plugin_inactive  = "GLPI n'a pas encore installé ou activé le plugin."
+    install_now      = "L'installer et l'activer maintenant ?"
+    ai_intro         = "L'assistant a besoin d'un fournisseur d'IA : un service cloud (avec une clé) ou un serveur local comme Ollama. Rien n'est envoyé avant qu'un technicien clique sur un bouton."
+    ai_now           = "Configurer le fournisseur d'IA maintenant ?"
+    ai_current       = 'Connexion actuelle : {0}, modèle "{1}", {2}.'
+    ai_change        = "Changer la connexion à l'IA ?"
+    state_ready      = 'prête'
+    choose_provider  = "Quel fournisseur d'IA ?"
+    p_openai         = "OpenAI`tmodèles GPT : vision, fichiers PDF, embeddings"
+    p_azure          = "Azure OpenAI`tdéploiements de votre ressource Azure"
+    p_anthropic      = "Anthropic (Claude)`tvision et fichiers PDF ; les embeddings demandent un second fournisseur"
+    p_gemini         = "Google Gemini`tvision et embeddings"
+    p_mistral        = "Mistral AI`tPixtral lit les images ; embeddings"
+    p_openrouter     = "OpenRouter`tune clé, des centaines de modèles"
+    p_ollama         = "Ollama`tmodèles locaux : sans clé, sans coût, les données restent chez vous"
+    p_compatible     = "Autre API compatible OpenAI`tLM Studio, vLLM, LiteLLM, Groq, DeepSeek…"
+    azure_url        = 'Adresse de la ressource Azure (https://<ressource>.openai.azure.com)'
+    azure_version    = 'Version de l''API ("v1" pour la nouvelle API v1)'
+    base_url_ask     = "Adresse de l'API (vue depuis le serveur GLPI)"
+    key_where        = 'Créez une clé sur {0}'
+    key_ask          = "Clé d'API (masquée ; collez-la avec Ctrl+V ou le bouton droit)"
+    key_optional     = "Clé d'API (facultative pour ce fournisseur : Entrée pour passer)"
+    key_keep         = "Garder la clé d'API déjà enregistrée ?"
+    key_empty        = "Ce fournisseur a besoin d'une clé."
+    saving           = 'Enregistrement de la connexion'
+    listing          = 'Demande de la liste des modèles au fournisseur'
+    choose_model     = 'Quel modèle ?'
+    model_ask        = 'Nom du modèle'
+    deployment_ask   = 'Nom du déploiement (Azure)'
+    model_hint       = 'Suggestions : {0}'
+    models_none      = "Le fournisseur n'a pas renvoyé de liste de modèles : saisissez le nom."
+    vision_tip       = "Préférez un modèle qui lit les images : les tickets contiennent souvent des captures d'écran."
+    testing          = 'Test de la connexion'
+    test_menu        = 'Le test de connexion a échoué. Que faire ?'
+    tf_retry         = 'Tester à nouveau'
+    tf_change        = 'Changer les réglages'
+    tf_skip          = 'Continuer, corriger plus tard dans Configuration > AI Ticket Assistant'
+    enabling_ai      = "Activation de l'assistant"
+    personalize      = 'Personnaliser les réponses maintenant (organisation, langue) ?'
+    org_ask          = "Nom de l'organisation ou du service d'assistance (utilisé dans les réponses)"
+    lang_ask         = 'Langue des réponses'
+    lang_auto        = 'La même langue que le ticket'
+    costs_ask        = 'Définir les prix des tokens et le budget quotidien maintenant ? (nécessaire pour les limites de coût)'
+    price_in         = 'Prix par million de tokens en entrée (US$, d''après la grille tarifaire du modèle)'
+    price_out        = 'Prix par million de tokens en sortie (US$)'
+    budget           = 'Budget quotidien des techniciens (US$, 0 = aucun)'
+    saving_prefs     = 'Enregistrement des préférences'
+    sync_ask         = "Construire la bibliothèque des tickets résolus maintenant ? (sans appel à l'IA, sans coût)"
+    syncing          = 'Lecture des tickets résolus et clos'
+    cron_found       = 'Tâche planifiée du cron de GLPI trouvée : les actions automatiques tournent en arrière-plan.'
+    cron_missing     = "Aucune tâche planifiée ne lance les actions automatiques de GLPI : la synchronisation de la bibliothèque (aisync), l'apprentissage (ailearn), le triage (aitriage) et la purge des journaux (aipurge) tournent en mode CLI."
+    cron_create      = 'Créer la tâche planifiée "{0}" (chaque minute, en tant que SYSTEM) ?'
+    cron_created     = 'Tâche planifiée créée : {0}'
+    cron_manual      = "Créez une tâche planifiée qui s'exécute chaque minute :"
+    poppler_ok       = 'poppler trouvé ({0}) : les PDF complexes et numérisés sont lus.'
+    poppler_path_set = 'Dossier de poppler enregistré dans la configuration'
+    poppler_no_render = "pdftoppm.exe n'est pas dans ce dossier : les PDF numérisés ne sont pas lus."
+    poppler_missing  = "poppler n'est pas installé : le lecteur intégré extrait le texte des PDF numériques, mais les PDF numérisés ne sont pas lus. Pour les lire, installez poppler (ex. scoop install poppler) et indiquez son dossier bin dans Configuration > AI Ticket Assistant > Contexte et pièces jointes."
+    demo_ask         = 'Créer des données de démonstration (une entité, des catégories et 43 tickets) ? Seulement sur une instance de TEST.'
+    demo_running     = 'Création des données de démonstration'
+    summary_title    = 'Terminé'
+    s_ai             = 'IA'
+    s_library        = 'Bibliothèque'
+    mode_copy_short  = 'copié'
+    mode_link_short  = 'lié au dépôt'
+    ai_not_configured = 'non configurée'
+    test_ok          = 'connexion OK'
+    test_failed      = 'test de connexion échoué'
+    cases            = '{0} tickets résolus'
+    skipped          = 'ignoré'
+    found            = 'trouvé'
+    missing          = 'absent'
+    created          = 'créé'
+    builtin_reader   = 'lecteur intégré (PDF numériques)'
+    next_title       = 'Prochaines étapes'
+    next_1           = 'Revoyez chaque réglage dans GLPI > Configuration > AI Ticket Assistant.'
+    next_2           = 'Les profils des techniciens ont reçu le droit "Assistant IA" : ajustez-le dans Administration > Profils.'
+    next_3           = 'Ouvrez un ticket et cliquez sur "Assistant IA" en bas de la chronologie.'
+    un_warning       = "La désinstallation supprime les données du plugin : journal des analyses, bibliothèque des tickets résolus, suggestions, consignes IA des catégories et sa configuration, clés d'API comprises."
+    un_confirm       = 'Saisissez {0} pour confirmer'
+    un_cancelled     = 'Désinstallation annulée.'
+    deactivating     = 'Désactivation du plugin'
+    uninstalling     = 'Désinstallation du plugin'
+    remove_folder    = 'Supprimer aussi le dossier {0} ? (une sauvegarde est conservée)'
+    removed          = 'Dossier supprimé ; sauvegarde dans {0}'
+    uninstalled      = 'Le plugin a été désinstallé.'
+    cancelled        = 'Annulé.'
+    log_at           = 'Journal complet : {0}'
+    unattended_glpi  = 'Mode non interactif : utilisez -GlpiPath ou -Docker (trouvées : {0}).'
+    php_missing_docker = 'PHP introuvable sur cet ordinateur : seul un GLPI dans un conteneur peut recevoir le plugin.'
+    docker_where     = 'conteneur {0} → {1}'
+    docker_unavailable = 'Docker (ou Podman) ne répond pas : Docker Desktop est-il installé et lancé ?'
+    docker_no_access = 'Docker (ou Podman) est installé mais ne répond pas : lancez Docker Desktop pour chercher aussi dans les conteneurs.'
+    docker_no_glpi   = 'Aucun GLPI trouvé dans le conteneur {0} (est-il lancé ?) : utilisez -GlpiPath, le dossier de GLPI dans le conteneur.'
+    docker_not_glpi  = "{0} n'est pas un dossier GLPI dans le conteneur {1}."
+    docker_php       = 'PHP {0} dans le conteneur'
+    docker_ext_hint  = "Ajoutez-les à l'image du conteneur."
+    web_user         = 'Utilisateur du serveur web : {0}'
+    web_user_ask     = 'Quel utilisateur fait tourner le serveur web dans le conteneur (propriétaire des fichiers de GLPI) ?'
+    perms            = 'Propriétaire {0} et permissions'
+    docker_no_link   = 'Un conteneur ne peut pas être lié à ce dépôt : les fichiers sont copiés.'
+    docker_mounted   = 'Le dossier {0} du conteneur est monté depuis {1} : il est utilisé tel quel (mettez les fichiers à jour là-bas).'
+    docker_mounted_kept = 'Le dossier {0} du conteneur est monté depuis {1} : ses fichiers sont laissés en place.'
+    docker_volume    = 'Dossier du plugin sur un volume du conteneur : {0}'
+    docker_no_volume = "Le dossier {0} du conteneur n'est pas sur un volume : recréer le conteneur (après une mise à jour de l'image, par exemple) supprime le plugin. Montez-le comme volume, ou relancez cet installateur après avoir recréé le conteneur."
+    docker_url_hint  = "Dans le conteneur, localhost est le conteneur lui-même : utilisez l'adresse de cet ordinateur vue depuis le conteneur ({0}). Le serveur d'IA doit accepter ces connexions (Ollama : OLLAMA_HOST=0.0.0.0)."
+    docker_cron_found = 'Cron trouvé dans le conteneur ({0}) : les actions automatiques tournent en arrière-plan.'
+    docker_cron_missing = "Aucun cron ne lance les actions automatiques de GLPI dans le conteneur : la synchronisation de la bibliothèque (aisync), l'apprentissage (ailearn), le triage (aitriage) et la purge des journaux (aipurge) tournent en mode CLI."
+    docker_cron_manual = "Lancez cette commande chaque minute (une tâche planifiée de cet ordinateur, ou un cron dans l'image) :"
+    docker_poppler_ok = 'poppler-utils trouvé dans le conteneur : les PDF complexes et numérisés sont lus.'
+    docker_poppler_missing = "poppler-utils n'est pas dans le conteneur : le lecteur intégré extrait le texte des PDF numériques, mais les PDF numérisés ne sont pas lus. Ajoutez poppler-utils à l'image (les paquets installés dans un conteneur en cours d'exécution sont perdus quand il est recréé)."
+    mode_mount_short = 'dossier monté depuis cet ordinateur'
+    menu_hint        = '↑↓ déplacer · Entrée choisir'
+    filter_hint      = '↑↓ déplacer · taper pour filtrer · Entrée choisir · Échap saisir un nom'
+    filter_label     = 'Filtre'
+    n_of_m           = '{0} sur {1}'
+    yes              = 'Oui'
+    no               = 'Non'
+}
 
+# Language of the installer: -Lang, else the language of Windows. The first question of an
+# interactive run lets the user change it (Select-Language).
 $UiLang = 'en'
-if ($Lang) { $UiLang = $Lang } elseif ((Get-UICulture).Name -like 'pt*' -or (Get-Culture).Name -like 'pt*') { $UiLang = 'pt' }
+if ($Lang) { $UiLang = $Lang }
+elseif ((Get-UICulture).Name -like 'pt*' -or (Get-Culture).Name -like 'pt*') { $UiLang = 'pt' }
+elseif ((Get-UICulture).Name -like 'fr*' -or (Get-Culture).Name -like 'fr*') { $UiLang = 'fr' }
 
 function T([string]$Key) {
     $format = $null
     if ($script:UiLang -eq 'pt' -and $script:MsgPt.ContainsKey($Key)) { $format = $script:MsgPt[$Key] }
+    elseif ($script:UiLang -eq 'fr' -and $script:MsgFr.ContainsKey($Key)) { $format = $script:MsgFr[$Key] }
     elseif ($script:MsgEn.ContainsKey($Key)) { $format = $script:MsgEn[$Key] }
     else { $format = $Key }
     if ($args.Count -gt 0) { return [string]::Format($format, [object[]]$args) }
@@ -488,7 +664,7 @@ Without options the installer asks every question in terminal menus.
   -Status              show the state of the assistant and test the connection
   -Configure           only configure the AI provider
   -Uninstall           uninstall the plugin
-  -Lang en|pt          language of the installer
+  -Lang en|pt|fr       language of the installer (default: asked first; unattended: the language of Windows)
   -Yes                 unattended: accept the defaults, ask nothing
   -NoColor             plain output
   -Help                this help
@@ -771,7 +947,7 @@ function Read-Confirm([string]$Question, [bool]$Default = $true) {
             $key = Read-UiKey
             $c = ([string]$key.KeyChar).ToLowerInvariant()
             if ($key.Key -eq 'Enter') { break }
-            if ($c -eq 'y' -or $c -eq 's') { $answer = $true; break }
+            if ($c -eq 'y' -or $c -eq 's' -or ($c -eq 'o' -and $script:UiLang -eq 'fr')) { $answer = $true; break }
             if ($c -eq 'n') { $answer = $false; break }
             if ($key.Key -in @('LeftArrow', 'RightArrow', 'Tab', 'Spacebar')) { $answer = -not $answer }
         }
@@ -1290,7 +1466,7 @@ function Test-Admin {
 function Get-ConsoleCommand([string[]]$Arguments, [bool]$Stdin = $false) {
     # Messages of GLPI and of the plugin in the language of the installer
     $lang = @()
-    if ($script:UiLang -eq 'pt') { $lang = @('--lang=pt_BR') }
+    if ($script:UiLang -eq 'pt') { $lang = @('--lang=pt_BR') } elseif ($script:UiLang -eq 'fr') { $lang = @('--lang=fr_FR') }
     $console = @('--no-interaction', '--no-ansi') + $script:ConsoleExtra + $lang + $Arguments
     if (-not $script:Container) {
         return [pscustomobject]@{ FilePath = $script:PhpExe; Arguments = @(@('bin\console') + $console); Directory = $script:Glpi }
@@ -1889,7 +2065,7 @@ function Set-Preferences {
         $codes = @('auto', 'pt_BR', 'en_GB', 'es_ES', 'fr_FR', 'pt_PT', 'de_DE', 'it_IT', 'nl_NL', 'pl_PL')
         $labels = @((T 'lang_auto'), 'Português (Brasil)', 'English', 'Español', 'Français', 'Português (Portugal)', 'Deutsch', 'Italiano', 'Nederlands', 'Polski')
         $default = 0
-        if ($script:UiLang -eq 'pt') { $default = 1 }
+        if ($script:UiLang -eq 'pt') { $default = 1 } elseif ($script:UiLang -eq 'fr') { $default = 4 }
         $sets += '--set=response_language=' + $codes[(Show-Menu (T 'lang_ask') $labels $default)]
         if (-not (Invoke-Console (T 'saving_prefs') (@('plugins:ticketassistant:configure') + $sets))) { Show-OutputBox (T 'console_error') }
     }
@@ -2151,11 +2327,20 @@ function Show-MainMenu([string]$Installed) {
     }
 }
 
+function Select-Language { # first question of an interactive run: the language of the installer
+    if (-not $script:Interactive -or $Lang) { return }
+    $codes = @('en', 'pt', 'fr')
+    $labels = @('English', 'Português (Brasil)', 'Français')
+    $default = [Math]::Max(0, $codes.IndexOf($script:UiLang))
+    $script:UiLang = $codes[(Show-Menu ('Language ' + $script:Sym.dot + ' Idioma ' + $script:Sym.dot + ' Langue') $labels $default)]
+}
+
 function Invoke-Main {
     if ($Help) { Show-Usage; return }
     Initialize-Ui
     try { Set-Content -LiteralPath $script:LogFile -Value "GLPI AI Ticket Assistant installer $PluginVersion" -Encoding UTF8 } catch { $script:LogFile = '(no log)' }
     Show-Banner
+    Select-Language
     Step-Checks
     Step-Glpi
     $installed = Get-InstalledPluginVersion

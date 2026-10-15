@@ -128,7 +128,7 @@ As mesmas etapas do Linux, adaptadas ao Windows:
 
 Opções: `-GlpiPath`, `-Docker`, `-Php`, `-WebUser`, `-Mode Copy|Link`, `-GlpiUser`, `-Provider`,
 `-BaseUrl`, `-Model`, `-ApiVersion`, `-ApiKeyEnv`, `-SkipAi`, `-Sync yes|no`, `-Cron yes|no`, `-Demo`,
-`-Status`, `-Configure`, `-Uninstall`, `-Lang en|pt`, `-Yes`, `-NoColor`, `-Help`.
+`-Status`, `-Configure`, `-Uninstall`, `-Lang en|pt|fr`, `-Yes`, `-NoColor`, `-Help`.
 
 ```powershell
 $env:OPENAI_API_KEY = 'sk-...'
