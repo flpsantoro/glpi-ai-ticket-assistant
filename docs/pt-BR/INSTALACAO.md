@@ -41,8 +41,9 @@ sudo bash install.sh
 ```
 
 O instalador é um assistente de terminal (setas, Enter, listas com filtro por digitação, chave
-digitada oculta) em português ou inglês, conforme o `LANG` ou `--lang`. Ele nunca muda nada sem
-perguntar, e cada etapa pode ser pulada:
+digitada oculta) em português, inglês ou francês: a primeira pergunta é o idioma (`--lang` responde
+por ela; no modo não interativo, o `LANG` decide). Ele nunca muda nada sem perguntar, e cada etapa
+pode ser pulada:
 
 1. **Sistema**: binários do PHP (o do `PATH`, `/usr/bin/php8.x`, coleções Remi…), extensões,
    ferramenta de cópia.
@@ -99,7 +100,7 @@ OPENAI_API_KEY=sk-... sudo -E bash install.sh --yes --glpi /var/www/glpi \
 | `--poppler yes\|no` | instalar o poppler-utils quando faltar |
 | `--demo` | dados de demonstração (só instâncias de teste) |
 | `--status`, `--configure`, `--uninstall` | executar só essa parte |
-| `--lang en\|pt`, `--no-color`, `-y/--yes` | interface |
+| `--lang en\|pt\|fr`, `--no-color`, `-y/--yes` | interface |
 
 ## Instalador para Windows
 

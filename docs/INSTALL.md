@@ -39,8 +39,9 @@ sudo bash install.sh
 ```
 
 The installer is a terminal wizard (arrow keys, Enter, type-to-filter lists, hidden input for the
-key) in English or Portuguese, according to `LANG` or `--lang`. It never changes anything without
-asking, and each step can be skipped:
+key) in English, Portuguese or French: its first question is the language (`--lang` answers it in
+advance; unattended, `LANG` decides). It never changes anything without asking, and each step can
+be skipped:
 
 1. **System**: PHP binaries (the one in the `PATH`, `/usr/bin/php8.x`, Remi collections…), PHP
    extensions, copy tool.
@@ -96,7 +97,7 @@ OPENAI_API_KEY=sk-... sudo -E bash install.sh --yes --glpi /var/www/glpi \
 | `--poppler yes\|no` | install poppler-utils when missing |
 | `--demo` | demonstration data (test instances only) |
 | `--status`, `--configure`, `--uninstall` | run only that part |
-| `--lang en\|pt`, `--no-color`, `-y/--yes` | interface |
+| `--lang en\|pt\|fr`, `--no-color`, `-y/--yes` | interface |
 
 ## Installer for Windows
 

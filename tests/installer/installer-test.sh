@@ -54,6 +54,14 @@ check "in place: exit code" 0 "$?"
 check "in place: no copy onto itself" 1 "$(grep -c 'arquivos do plugin' "$WORK/out.txt")"
 check "in place: console messages in Portuguese" yes "$(grep -q 'lang=pt_BR' "$WORK/glpi/files/state.json" && echo yes)"
 
+# --- French ---------------------------------------------------------------------
+bash "$WORK/glpi/plugins/ticketassistant/install.sh" --yes --lang fr --glpi "$WORK/glpi" --php "$PHPBIN" \
+    --skip-ai --sync no --cron no --poppler no >"$WORK/out.txt" 2>&1
+check "french: exit code" 0 "$?"
+check "french: console messages in French" yes "$(grep -q 'lang=fr_FR' "$WORK/glpi/files/state.json" && echo yes)"
+check "french: messages of the installer" 1 "$(grep -c 'Prochaines étapes' "$WORK/out.txt")"
+check "french: no language question in unattended mode" 0 "$(grep -c 'Langue' "$WORK/out.txt")"
+
 # --- GLPI in a container: a fake docker (fake-docker/docker.php) plays a container
 # "glpi-app" whose files are in $WORK/container, and a "db" container without PHP
 CONTAINER=$WORK/container
@@ -198,6 +206,9 @@ check "mounted: localhost is the container" 1 "$(grep -c '(172.18.0.1)' "$WORK/o
     press ENTER; ui_confirm "sure?" n; check "confirm: Enter keeps the default" 1 "$?"
     press sk- BS 12 ENTER; ui_secret "key"; check "secret: backspace" sk12 "$REPLY_TEXT"
     press LINE:DEFAULT; ui_input "name" glpi; check "input: default" glpi "$REPLY_TEXT"
+    OPT_LANG="" UI_LANG=en; press DOWN DOWN ENTER; choose_language; check "language: third choice is French" fr "$UI_LANG"
+    OPT_LANG="" UI_LANG=pt; press ENTER; choose_language; check "language: the detected one is the default" pt "$UI_LANG"
+    OPT_LANG=en UI_LANG=en; choose_language; check "language: --lang skips the question" en "$UI_LANG"
 
     # Interactive AI configuration: configure now? (Enter = yes) · Ollama (6 downs) · default address
     # · no key · model filter "5.4" · personalize? Enter = no · costs? Enter = no
